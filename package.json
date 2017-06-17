@@ -1,0 +1,23 @@
+{
+  "name": "absencebot",
+  "version": "1.0.0",
+  "description": "A bot for requesting / approving annual leave in Timetastic",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ben Whitman",
+  "license": "ISC",
+  "dependencies": {
+    "@slack/client": "^3.10.0",
+    "async": "^2.4.1",
+    "babel-eslint": "^7.2.3",
+    "commander": "^2.9.0",
+    "eslint": "^3.19.0",
+    "eslint-config-defaults": "^9.0.0",
+    "lodash": "^4.17.4",
+    "moment": "^2.18.1",
+    "promptly": "^2.2.0",
+    "request": "^2.81.0"
+  }
+}
