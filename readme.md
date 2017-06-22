@@ -17,7 +17,7 @@ A Slackbot for booking annual leave in TimeTastic implemented in AWS Lex and Lam
 
 First install the AWS command line utility, and configure it with an appropriate security token that has the permissions:
 
-* lex - create intents / bots
+* lex - create intents / bots lex:PutIntent
 * lambda - create / update functions
 
-Clone this repository and run npm setup. This command will ask you for your TimeTastic API token which you can get [http://api.timetastic.com])(here). When the installation is complete you will have a bot configured for your TimeTastic account that you can proceed to add to Slack.
+Clone this repository and run npm setup. This command will ask you for your TimeTastic API token which you can get [here](http://api.timetastic.com). When the installation is complete you will have a bot configured for your TimeTastic account that you can proceed to add to Slack.

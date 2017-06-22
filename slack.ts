@@ -1,16 +1,19 @@
+declare var process: any;
+
 var slackToken = process.env.SlackToken;
-var _ = require('lodash');
-var WebClient = require('@slack/client').WebClient;
+import * as _ from 'lodash';
+import { WebClient } from '@slack/client';
+//var WebClient = require('@slack/client').WebClient;
 var web = new WebClient(slackToken);
 
-function getEmailAddressFromSlackUserId(userId, callback) {
+export function getEmailAddressFromSlackUserId(userId, callback) {
     console.log("getEmailAddressFromSlackUserId starting for " + userId);
     web.users.info(userId, (err, users) => {
         console.log("getting email address");
 
         if (err) {
             console.error("Error: " + JSON.stringify(err));
-            return Error(error);
+            return Error(err);
         } else {
 
             // find our user in the team's users
@@ -22,5 +25,3 @@ function getEmailAddressFromSlackUserId(userId, callback) {
         }
     });
 }
-
-module.exports.getEmailAddressFromSlackUserId = getEmailAddressFromSlackUserId;

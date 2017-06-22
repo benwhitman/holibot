@@ -1,11 +1,12 @@
 "use strict";
 
 // import other functions
-var timetastic = require('./timetastic');
+import { bookHoliday, getHolidaysForUser, resolveUserId } from './timetastic';
+import * as request from 'request';
 
-var request = require('request');
+declare var process: any;
 
-var endpoint = "https://app.timetastic.co.uk/api/";
+var endpoint = process.env.TimeTasticEndpoint;
 
 // create a base request used by all calls to the TimeTastic api.
 var baseRequest = request.defaults({
@@ -31,7 +32,7 @@ function close(sessionAttributes, fulfillmentState, message, responseCard) {
 function checkMyHolidays(intentRequest, slackUser, callback) {
     const outputSessionAttributes = intentRequest.sessionAttributes || {};
 
-    timetastic.resolveUserId(slackUser)
+    resolveUserId(slackUser)
         .then((userId) => {
             console.log("TT user id: " + userId);
 
@@ -40,14 +41,14 @@ function checkMyHolidays(intentRequest, slackUser, callback) {
                 endDate: intentRequest.currentIntent.slots.EndDate
             };
 
-            timetastic.getHolidaysForUser(userId, slots, callback, close, outputSessionAttributes);
+            getHolidaysForUser(userId, slots, callback, close, outputSessionAttributes);
         });
 }
 
 function requestTimeOff(intentRequest, slackUser, callback) {
     const outputSessionAttributes = intentRequest.sessionAttributes || {};
 
-    timetastic.resolveUserId(slackUser)
+    resolveUserId(slackUser)
         .then((userId) => {
             console.log("TT user id: " + userId);
 
@@ -56,7 +57,7 @@ function requestTimeOff(intentRequest, slackUser, callback) {
                 endDate: intentRequest.currentIntent.slots.EndDate
             };
 
-            timetastic.bookHoliday(userId, slots, callback, close, outputSessionAttributes);
+            bookHoliday(userId, slots, callback, close, outputSessionAttributes);
         });
 }
 
@@ -80,7 +81,7 @@ function handleIntent(intentRequest, callback) {
 }
 
 // main handler
-exports.handler = (event, context, callback) => {
+export function handler(event, context, callback) {
     try {
         console.log(`event.bot.name=${event.bot.name}`);
 

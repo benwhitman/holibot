@@ -1,0 +1,18 @@
+{
+    "name": "CheckMyHolidays",
+    "sampleUtterances": [
+        "Which holidays do I have booked",
+        "holidays",
+        "What's my allowance",
+        "How many days holiday do I have",
+        "Which holidays are pending approval"
+    ],
+    "fulfillmentActivity": {
+        "type": "CodeHook",
+        "codeHook": {
+            "messageVersion": "1.0",
+            "uri": "this-will-get-replaced-by-the-setup-script"
+        }
+    },
+    "slots": []
+}

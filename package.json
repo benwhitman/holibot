@@ -10,14 +10,24 @@
   "license": "ISC",
   "dependencies": {
     "@slack/client": "^3.10.0",
+    "@types/node": "^8.0.1",
     "async": "^2.4.1",
+    "aws-sdk": "^2.74.0",
     "babel-eslint": "^7.2.3",
     "commander": "^2.9.0",
     "eslint": "^3.19.0",
     "eslint-config-defaults": "^9.0.0",
+    "json-loader": "^0.5.4",
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "promptly": "^2.2.0",
     "request": "^2.81.0"
+  },
+  "devDependencies": {
+    "@types/node": "^8.0.1",
+    "serverless-webpack": "^1.0.0-rc.4",
+    "ts-loader": "^2.1.0",
+    "typescript": "^2.3.4",
+    "webpack": "^2.6.1"
   }
 }
