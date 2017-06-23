@@ -1,10 +1,8 @@
 "use strict";
 
 // import other functions
-import { bookHoliday, getHolidaysForUser, resolveUserId } from './timetastic';
-import * as request from 'request';
-
-declare var process: any;
+var Timetastic = require('./timetastic');
+var request = require('request');
 
 var endpoint = process.env.TimeTasticEndpoint;
 
@@ -18,12 +16,12 @@ var baseRequest = request.defaults({
 
 function close(sessionAttributes, fulfillmentState, message, responseCard) {
     return {
-        sessionAttributes,
+        sessionAttributes: sessionAttributes,
         dialogAction: {
             type: 'Close',
-            fulfillmentState,
-            message,
-            responseCard
+            fulfillmentState: fulfillmentState,
+            message: message,
+            responseCard: responseCard
         }
     };
 }
@@ -32,7 +30,7 @@ function close(sessionAttributes, fulfillmentState, message, responseCard) {
 function checkMyHolidays(intentRequest, slackUser, callback) {
     const outputSessionAttributes = intentRequest.sessionAttributes || {};
 
-    resolveUserId(slackUser)
+    Timetastic.resolveUserId(slackUser)
         .then((userId) => {
             console.log("TT user id: " + userId);
 
@@ -41,14 +39,14 @@ function checkMyHolidays(intentRequest, slackUser, callback) {
                 endDate: intentRequest.currentIntent.slots.EndDate
             };
 
-            getHolidaysForUser(userId, slots, callback, close, outputSessionAttributes);
+            Timetastic.getHolidaysForUser(userId, slots, callback, close, outputSessionAttributes);
         });
 }
 
 function requestTimeOff(intentRequest, slackUser, callback) {
     const outputSessionAttributes = intentRequest.sessionAttributes || {};
 
-    resolveUserId(slackUser)
+    Timetastic.resolveUserId(slackUser)
         .then((userId) => {
             console.log("TT user id: " + userId);
 
@@ -57,7 +55,7 @@ function requestTimeOff(intentRequest, slackUser, callback) {
                 endDate: intentRequest.currentIntent.slots.EndDate
             };
 
-            bookHoliday(userId, slots, callback, close, outputSessionAttributes);
+            Timetastic.bookHoliday(userId, slots, callback, close, outputSessionAttributes);
         });
 }
 
@@ -81,11 +79,11 @@ function handleIntent(intentRequest, callback) {
 }
 
 // main handler
-export function handler(event, context, callback) {
+exports.handler = function (event, context, callback) {
     try {
         console.log(`event.bot.name=${event.bot.name}`);
 
-        if (event.bot.name !== 'AnnualLeave') {
+        if (event.bot.name !== 'Holibot') {
             callback('Invalid Bot Name');
         }
 

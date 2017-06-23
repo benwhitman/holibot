@@ -1,5 +1,5 @@
-import * as moment from 'moment';
-import * as _ from 'lodash';
+var moment = require('moment');
+var _ = require('lodash');
 
 // takes a moment object and formats it
 function prettyDate(d) {
@@ -11,7 +11,7 @@ function prettyDate(d) {
 Takes in a list of booked holidays and presents them as a list of holidays in a readable format
 grouped by status
 */
-export function holidayList(holidays) {
+exports.holidayList = function (holidays) {
     console.log(JSON.stringify(holidays));
     if (holidays.length === 0) {
         return "You have no planned holidays booked or in a pending status";

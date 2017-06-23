@@ -1,12 +1,9 @@
-declare var process: any;
-
 var slackToken = process.env.SlackToken;
-import * as _ from 'lodash';
-import { WebClient } from '@slack/client';
-//var WebClient = require('@slack/client').WebClient;
+var _ = require('lodash');
+var WebClient = require('@slack/client').WebClient;
 var web = new WebClient(slackToken);
 
-export function getEmailAddressFromSlackUserId(userId, callback) {
+exports.getEmailAddressFromSlackUserId = function(userId, callback) {
     console.log("getEmailAddressFromSlackUserId starting for " + userId);
     web.users.info(userId, (err, users) => {
         console.log("getting email address");

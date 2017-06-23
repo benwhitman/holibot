@@ -16,12 +16,12 @@ AWS.config.update({ region: 'us-east-1' });
 //Lambda.config.update({ region: 'us-east-1' });
 
 // the name of the lambda function that acts as a handler for all Holibot intents
-const holibotFunctionHandler = "holibot-prod-lex-handler";
+const holibotFunctionHandler = "holibot-prod-handler";
 
 // the configured intents for this bot
 var intents = [];
-intents.push(JSON.parse(fs.readFileSync("./lex-intents/CheckMyHolidays.json", 'utf-8')));
-intents.push(JSON.parse(fs.readFileSync("./lex-intents/RequestTimeOff.json", 'utf-8')));
+intents.push(JSON.parse(fs.readFileSync("./lex-objects/CheckMyHolidays.json", 'utf-8')));
+intents.push(JSON.parse(fs.readFileSync("./lex-objects/RequestTimeOff.json", 'utf-8')));
 
 var holibotFunctionHandlerArn;
 var accountId;
@@ -31,7 +31,7 @@ program
     .option('-t, --timetastic-token [value]')
     .parse(process.argv);
 
-console.log("holibot installer.");
+console.log("Holibot installer.");
 if (!program.timetasticToken) {
     promptly.prompt("Please enter your TimeTastic API token", (err, timeTasticToken) => {
         deploy(timeTasticToken);
@@ -68,8 +68,8 @@ function deploy(timeTasticToken) {
 function deployServerlessProject(result) {
     console.log("Deploying Serverless project to AWS. This will create a stack in us-east-1 named holibot");
 
-    //run("sls", ["deploy", "--stage", "prod", "--region", "us-east-1"], getLambdaFunctionArn);
-    getLambdaFunctionArn();
+    run("sls", ["deploy", "--stage", "prod", "--region", "us-east-1"], getLambdaFunctionArn);
+    //getLambdaFunctionArn();
 }
 
 function getLambdaFunctionArn(result) {
@@ -92,40 +92,84 @@ function getLambdaFunctionArn(result) {
     });
 }
 
-function deployLexObjects() {
+async function deployLexObjects() {
     console.log("Deploying AWS Lex objects");
 
-    intents.forEach((intent) => {
-        console.log("* intent: " + intent.name);
+    // delete existing bot and intents if they exist
+    try {
+        existingBot = await Lex.getBot({ name: "Holibot", versionOrAlias: "$LATEST" }).promise();
+
+        if (existingBot) {
+            console.log("Holibot already exists - deleting");
+            await Lex.deleteBot({ name: existingBot.name }).promise();
+            console.log("existing bot deleted");
+        };
+    }
+    catch (error) {
+        console.log("No existing bot: " + error);
+    }
+
+    await intents.forEach(async (intent) => {
+        try {
+            let existingIntent = await Lex.getIntent({ name: intent.name, version: "$LATEST" }).promise();
+
+            if (existingIntent) {
+                console.log("intent " + intent.name + " exists - deleting");
+                await Lex.deleteIntent({ name: existingIntent.name }).promise();
+                console.log("existing intent " + existingIntent.name + " deleted");
+            }
+        }
+        catch (error) {
+            console.log("no existing intent " + intent.name);
+        }
+    });
+
+    var ops = [];
+
+    // add permission for Lex to invoke the Lambda function
+    ops.push(
         Lambda.addPermission({
             FunctionName: holibotFunctionHandler,
             Action: "lambda:InvokeFunction",
             Principal: "lex.amazonaws.com",
-            StatementId: holibotFunctionHandler + "-" + intent.name + makeid(5)
-        }, (err, data) => {
-            if (err) {
-                console.log("Error: " + err);
-                process.exit();
-            }
-            console.log("Lambda permissions granted for " + intent.name);
+            StatementId: holibotFunctionHandler + "-" + makeid(5)
+        }).promise());
 
-            Lex.putIntent(intent, (err, data) => {
-                if (err) {
-                    console.log("Error: " + err);
-                    process.exit();
-                }
-                console.log("Lex model created for " + intent.name);
-            });
-        });
+    // create each intent
+    intents.forEach((intent) => {
+        console.log("* intent: " + intent.name);
+
+        ops.push(
+            Lex.putIntent(intent).promise()
+        );
     });
 
-    function makeid(n) {
-        var text = "";
-        var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    // after all commands to create and permission intents have been carried out, create the bot itself
+    Promise.all(ops)
+        .then(() => {
+            // create the bot
+            Lex.putBot(JSON.parse(fs.readFileSync('./lex-objects/bot.json', 'utf-8')))
+                .promise()
+                .then((result) => {
+                    console.log("Bot created successfully. Now you need to add the bot to Slack: ");
+                })
+                .catch((error) => {
+                    console.error("Error creating bot: " + error);
+                });
+        })
+        .catch((err) => {
+            console.error("Error creating or permissioning an intent:" + err);
+            process.exit();
+        });
+}
 
-        for (var i = 0; i < n; i++)
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
 
-        return text;
-    }
+function makeid(n) {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for (var i = 0; i < n; i++)
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
 }

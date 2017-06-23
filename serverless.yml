@@ -5,14 +5,17 @@ provider:
   runtime: nodejs6.10
   region: us-east-1
 
-plugins:
-  - serverless-webpack
-  
 functions:
-  lex-handler:
+  handler:
     handler: handler.handler
     description: The handler for holibot. Invoked by Lex when users chat to Holibot.
 
     environment:
       TimeTasticToken: ${file(./token.yml):timetastic}
       TimeTasticEndpoint: https://app.timetastic.co.uk/api/
+
+    package:
+      include:
+        - timetastic.js
+        - slack.js
+        - formatters.js

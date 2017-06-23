@@ -1,0 +1,35 @@
+{
+    "intents": [
+        {
+            "intentVersion": "$LATEST",
+            "intentName": "CheckMyHolidays"
+        },
+        {
+            "intentVersion": "$LATEST",
+            "intentName": "RequestTimeOff"
+        }
+    ],
+    "name": "Holibot",
+    "locale": "en-US",
+    "abortStatement": {
+        "messages": [
+            {
+                "content": "Sorry, I'm not able to assist at this time",
+                "contentType": "PlainText"
+            }
+        ]
+    },
+    "clarificationPrompt": {
+        "maxAttempts": 2,
+        "messages": [
+            {
+                "content": "I didn't understand you, what would you like me to do?",
+                "contentType": "PlainText"
+            }
+        ]
+    },
+    "voiceId": "Salli",
+    "childDirected": false,
+    "idleSessionTTLInSeconds": 600,
+    "description": "Book and query your annual leave in TimeTastic"
+}

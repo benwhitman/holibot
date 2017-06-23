@@ -1,12 +1,9 @@
-import { getEmailAddressFromSlackUserId } from './slack';
-import { holidayList } from './formatters';
-import * as _ from 'lodash';
+var Slack = require('./slack');
+var Formatters = require('./formatters');
+var _ = require('lodash');
+var request = require('request');
 
-declare var process: any;
-
-var endpoint = "https://app.timetastic.co.uk/api/";
-
-import * as request from 'request';
+var endpoint = process.env.TimeTasticEndpoint;
 
 // create a base request used by all calls to the TimeTastic api.
 var baseRequest = request.defaults({
@@ -17,12 +14,12 @@ var baseRequest = request.defaults({
 });
 
 // this function takes the user id supplied in the original intent, which is the slack id
-export function resolveUserId(slackUser) {
+exports.resolveUserId = function (slackUser) {
     console.log("resolveUserId starting for " + slackUser);
     return new Promise((resolve, reject) => {
 
         // get the email address of the slackUser using the Slack WebClient
-        var email = getEmailAddressFromSlackUserId(slackUser, (email) => {
+        var email = Slack.getEmailAddressFromSlackUserId(slackUser, (email) => {
             console.log("resolveTimeTasticUserId: got email address: " + email);
 
             // now we have the email address of the slack user, look up that user's id in TimeTastic
@@ -45,7 +42,7 @@ export function resolveUserId(slackUser) {
     });
 }
 
-export function bookHoliday(userId, slots, callback, close, outputSessionAttributes) {
+exports.bookHoliday = function (userId, slots, callback, close, outputSessionAttributes) {
     // create a TimeTastic holiday approval request based on the supplied intent request data
     var leaveRequest = {
         "from": slots.startDate,
@@ -80,7 +77,7 @@ export function bookHoliday(userId, slots, callback, close, outputSessionAttribu
     });
 }
 
-export function getHolidaysForUser(userId, slots, callback, close, outputSessionAttributes) {
+exports.getHolidaysForUser = function (userId, slots, callback, close, outputSessionAttributes) {
     var getHolidaysRequest = {
         "from": slots.startDate,
         "fromTime": "AM",
@@ -100,7 +97,7 @@ export function getHolidaysForUser(userId, slots, callback, close, outputSession
         if (response.statusCode === 200) {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
                 contentType: 'PlainText',
-                content: holidayList(body.holidays) + 
+                content: Formatters.holidayList(body.holidays) + 
                     `\n\nIf you would like to modify one of these bookings enter *modify <id>*`
             }));
         } else {

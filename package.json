@@ -1,11 +1,8 @@
 {
-  "name": "absencebot",
+  "name": "holibot",
   "version": "1.0.0",
-  "description": "A bot for requesting / approving annual leave in Timetastic",
+  "description": "An AWS Lex chatbot for requesting / approving annual leave in Timetastic",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "author": "Ben Whitman",
   "license": "ISC",
   "dependencies": {
@@ -14,10 +11,10 @@
     "async": "^2.4.1",
     "aws-sdk": "^2.74.0",
     "babel-eslint": "^7.2.3",
+    "bufferutil": "^3.0.1",
     "commander": "^2.9.0",
     "eslint": "^3.19.0",
     "eslint-config-defaults": "^9.0.0",
-    "json-loader": "^0.5.4",
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "promptly": "^2.2.0",
@@ -25,9 +22,11 @@
   },
   "devDependencies": {
     "@types/node": "^8.0.1",
+    "json-loader": "^0.5.4",
     "serverless-webpack": "^1.0.0-rc.4",
     "ts-loader": "^2.1.0",
     "typescript": "^2.3.4",
+    "uglify-es-webpack-plugin": "0.0.2",
     "webpack": "^2.6.1"
   }
 }
