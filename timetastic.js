@@ -64,39 +64,27 @@ exports.bookHoliday = function (userId, slots, callback, close, outputSessionAtt
         console.log("Error: " + JSON.stringify(error));
         console.log("body: " + JSON.stringify(body));
 
-        if (body.success) {
-            callback(null, close(outputSessionAttributes, 'Fulfilled', {
-                contentType: 'PlainText',
-                content: `Okay, I have booked your holiday. Bon voyage!`
-            }));
-        } else {
-            callback(null, close(outputSessionAttributes, 'Fulfilled', {
-                contentType: 'PlainText',
-                content: body.response
-            }));
-        }
+        callback(null, close(outputSessionAttributes, 'Fulfilled', {
+            contentType: 'PlainText',
+            content: body.response
+        }));
     });
 }
 
 exports.getHolidaysForUser = function (userId, slots, callback, close, outputSessionAttributes) {
-    var getHolidaysRequest = {
-        "start": slots.startDate || moment().format("YYYY-MM-DD"),
-        "userIds": userId
-    };
+    var url = endpoint + "holidays?userids=" + userId + "&start=" + moment().format("YYYY-MM-DD");
 
-    var url = endpoint + "holidays";
+    console.log("GET: " + url);
 
-    console.log("GET: " + JSON.stringify(getHolidaysRequest));
-
-    baseRequest.get(url, { json: getHolidaysRequest }, function (error, response, body) {
+    baseRequest.get(url, function (error, response, body) {
         console.log("Error: " + JSON.stringify(error));
-        console.log("body: " + JSON.stringify(body));
+        console.log("body: " + body);
 
         if (response.statusCode === 200) {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
                 contentType: 'PlainText',
-                content: Formatters.holidayList(body.holidays) + 
-                    `\n\nIf you would like to modify one of these bookings enter *modify <id>*`
+                content: Formatters.holidayList(JSON.parse(body).holidays) +
+                `\n\nIf you would like to modify one of these bookings enter *modify <id>*`
             }));
         } else {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
@@ -106,3 +94,5 @@ exports.getHolidaysForUser = function (userId, slots, callback, close, outputSes
         }
     });
 }
+//ae34cf8b-ad90-42d4-87b1-ba8ea93841ea
+//xoxp-59333733587-76497075795-206011889443-a093835ac6fea1c2c901cb7642eff891

@@ -5,7 +5,8 @@
         "I would like to take some time off",
         "I want to book a holiday",
         "I want to book a vacation",
-        "I'd like some time off from {StartDate} to {EndDate}"
+        "I'd like some time off from {StartDate} to {EndDate}",
+        "I need a holiday"
     ],
     "conclusionStatement": {
         "messages": [
