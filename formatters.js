@@ -17,6 +17,9 @@ exports.holidayList = function (holidays) {
         return "You have no planned holidays booked or in a pending status";
     } else {
         var response = "You have the following holidays booked:\n";
+        
+        // filter out holidays in the past
+
         _.forEach(holidays,
             (holiday) => {
                 var holidayDurationDays = holiday.bookingUnit === "Hours" ? holiday.duration / 24 : holiday.duration;

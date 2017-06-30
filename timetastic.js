@@ -2,6 +2,7 @@ var Slack = require('./slack');
 var Formatters = require('./formatters');
 var _ = require('lodash');
 var request = require('request');
+var moment = require('moment');
 
 var endpoint = process.env.TimeTasticEndpoint;
 
@@ -79,10 +80,7 @@ exports.bookHoliday = function (userId, slots, callback, close, outputSessionAtt
 
 exports.getHolidaysForUser = function (userId, slots, callback, close, outputSessionAttributes) {
     var getHolidaysRequest = {
-        "from": slots.startDate,
-        "fromTime": "AM",
-        "to": slots.endDate,
-        "toTime": "PM",
+        "start": slots.startDate || moment().format("YYYY-MM-DD"),
         "userIds": userId
     };
 

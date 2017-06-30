@@ -29,15 +29,16 @@ var accountId;
 program
     .version('1.0.0')
     .option('-t, --timetastic-token [value]')
+    .option('-s, --slack-token [value]')
     .parse(process.argv);
 
 console.log("Holibot installer.");
-if (!program.timetasticToken) {
-    promptly.prompt("Please enter your TimeTastic API token", (err, timeTasticToken) => {
-        deploy(timeTasticToken);
-    });
-} else {
-    deploy(program.timetasticToken);
+if (!program.timetasticToken || !program.slackToken) {
+    console.log("Please specify both your Timetastic API token with -t and your Slack Oauth token with -s");
+    process.exit();
+}
+else {
+    deploy(program.timetasticToken, program.slackToken);
 }
 
 // generic function to execute a shell command and return the stdout
@@ -46,6 +47,7 @@ function run(cmd, args, callback) {
     var command = spawn(cmd, args);
     var result = '';
     command.stdout.on('data', function (data) {
+        console.log(data.toString());
         result += data.toString();
     });
     command.on('error', (err) => {
@@ -57,19 +59,18 @@ function run(cmd, args, callback) {
     });
 }
 
-function deploy(timeTasticToken) {
+function deploy(timeTasticToken, slackToken) {
     // write the token to the serverless yml file
-    fs.writeFileSync('token.yml', 'timetastic: ' + timeTasticToken);
+    fs.writeFileSync('token.yml', 'timetastic: ' + timeTasticToken + '\nslack: ' + slackToken);
 
     // install npm dependencies
     run("npm", ["install"], deployServerlessProject);
 }
 
 function deployServerlessProject(result) {
-    console.log("Deploying Serverless project to AWS. This will create a stack in us-east-1 named holibot");
+    console.log("Deploying Serverless project to AWS. This will create a stack in us-east-1 named holibot. Note your provided tokens are saved to ./token.yml. You may wish to delete them.");
 
     run("sls", ["deploy", "--stage", "prod", "--region", "us-east-1"], getLambdaFunctionArn);
-    //getLambdaFunctionArn();
 }
 
 function getLambdaFunctionArn(result) {
@@ -151,11 +152,15 @@ async function deployLexObjects() {
             Lex.putBot(JSON.parse(fs.readFileSync('./lex-objects/bot.json', 'utf-8')))
                 .promise()
                 .then((result) => {
-                    console.log("Bot created successfully. Now you need to add the bot to Slack: ");
+                    console.log("Bot created successfully. Now you need to add the bot to Slack: Follow guidelines from Step 2 at http://docs.aws.amazon.com/lex/latest/dg/slack-bot-association.html");
                 })
                 .catch((error) => {
                     console.error("Error creating bot: " + error);
                 });
+        })
+        .then(() => {
+            // wait for AWS to provision the bot, and then continue to create the alias
+            waitForBotProvision(createBotAlias);
         })
         .catch((err) => {
             console.error("Error creating or permissioning an intent:" + err);
@@ -172,4 +177,38 @@ function makeid(n) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
 
     return text;
+}
+
+function waitForBotProvision(callback) {
+    setTimeout(() => {
+        var botCreated = Lex.getBot({
+            name: 'Holibot',
+            versionOrAlias: '$LATEST'
+        }, (err, bot) => {
+            console.log("Waiting for Holibot to be provisioned before creating the alias");
+            
+            if (err) {
+                waitForBotProvision(callback);
+            } else {
+                // bot created, continue
+                callback()
+            }
+        })
+    }, 2000);
+}
+
+function createBotAlias() {
+    // create the prod alias for the bot
+    Lex.putBotAlias({
+        name: 'prod',
+        botName: 'Holibot',
+        botVersion: '$LATEST'
+    })
+        .promise()
+        .then(() => {
+            console.log("Bot alias 'prod' created.");
+        })
+        .catch((error) => {
+            console.error("Error creating prod alias: " + error);
+        });
 }

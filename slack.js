@@ -22,3 +22,16 @@ exports.getEmailAddressFromSlackUserId = function(userId, callback) {
         }
     });
 }
+
+exports.getTeamIdFromSlackUserId = function(userId, callback) {
+    console.log("getTeamIdFromSlackUserId starting for " + userId);
+    web.team.info(userId, (err, team) => {
+        if (err) {
+            console.error("Error: " + JSON.stringify(err));
+            return Error(err);
+        } else {
+            console.log("Slack team: " + JSON.stringify(team));
+            callback(team);
+        }
+    })
+}

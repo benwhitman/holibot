@@ -63,6 +63,9 @@ function handleIntent(intentRequest, callback) {
     console.log(`handleIntent userId=${intentRequest.userId}, intent=${intentRequest.currentIntent.name}`);
     console.log("intent: " + JSON.stringify(intentRequest));
 
+    // extract the slack team to verify the TimeTastic token exists in DynamoDB
+    //var slackTeam = 
+
     // extract the Slack user id from the used id in the AWS Lex intentRequest
     var slackUser = intentRequest.userId.split(":")[2];
 
