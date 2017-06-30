@@ -1,0 +1,16 @@
+{
+    "name": "CheckAllowance",
+    "sampleUtterances": [
+        "How many days holiday do I have left",
+        "What's my holiday allowance",
+        "How much holiday time do I have"
+    ],
+    "fulfillmentActivity": {
+        "type": "CodeHook",
+        "codeHook": {
+            "messageVersion": "1.0",
+            "uri": "this-will-get-replaced-by-the-setup-script"
+        }
+    },
+    "slots": []
+}

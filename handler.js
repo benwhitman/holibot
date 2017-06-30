@@ -27,6 +27,17 @@ function close(sessionAttributes, fulfillmentState, message, responseCard) {
 }
 
 // -------------------- intents ----------------------- //
+function checkAllowance(intentRequest, slackUser, callback) {
+    const outputSessionAttributes = intentRequest.sessionAttributes || {};
+
+    Timetastic.resolveUserId(slackUser)
+        .then((userId) => {
+            console.log("TT user id: " + userId);
+
+            Timetastic.getAllowanceForUser(userId, callback, close, outputSessionAttributes);
+        });
+}
+
 function checkMyHolidays(intentRequest, slackUser, callback) {
     const outputSessionAttributes = intentRequest.sessionAttributes || {};
 
@@ -75,6 +86,9 @@ function handleIntent(intentRequest, callback) {
 
         case 'CheckMyHolidays':
             return checkMyHolidays(intentRequest, slackUser, callback);
+
+        case 'CheckAllowance':
+            return checkAllowance(intentRequest, slackUser, callback);
 
         default:
             throw new Error(`Intent with name ${name} not supported`);

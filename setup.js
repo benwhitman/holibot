@@ -13,7 +13,6 @@ var Lex = new AWS.LexModelBuildingService({ region: 'us-east-1' });
 
 // set the region - it's fixed as Lex only exists in one region for now
 AWS.config.update({ region: 'us-east-1' });
-//Lambda.config.update({ region: 'us-east-1' });
 
 // the name of the lambda function that acts as a handler for all Holibot intents
 const holibotFunctionHandler = "holibot-prod-handler";
@@ -22,6 +21,7 @@ const holibotFunctionHandler = "holibot-prod-handler";
 var intents = [];
 intents.push(JSON.parse(fs.readFileSync("./lex-objects/CheckMyHolidays.json", 'utf-8')));
 intents.push(JSON.parse(fs.readFileSync("./lex-objects/RequestTimeOff.json", 'utf-8')));
+intents.push(JSON.parse(fs.readFileSync("./lex-objects/CheckAllowance.json", 'utf-8')));
 
 var holibotFunctionHandlerArn;
 var accountId;
@@ -29,16 +29,15 @@ var accountId;
 program
     .version('1.0.0')
     .option('-t, --timetastic-token [value]')
-    .option('-s, --slack-token [value]')
     .parse(process.argv);
 
 console.log("Holibot installer.");
-if (!program.timetasticToken || !program.slackToken) {
-    console.log("Please specify both your Timetastic API token with -t and your Slack Oauth token with -s");
+if (!program.timetasticToken) {
+    console.log("Please specify your Timetastic API token with -t");
     process.exit();
 }
 else {
-    deploy(program.timetasticToken, program.slackToken);
+    deploy(program.timetasticToken);
 }
 
 // generic function to execute a shell command and return the stdout
@@ -59,9 +58,9 @@ function run(cmd, args, callback) {
     });
 }
 
-function deploy(timeTasticToken, slackToken) {
+function deploy(timeTasticToken) {
     // write the token to the serverless yml file
-    fs.writeFileSync('token.yml', 'timetastic: ' + timeTasticToken + '\nslack: ' + slackToken);
+    fs.writeFileSync('token.yml', 'timetastic: ' + timeTasticToken);
 
     // install npm dependencies
     run("npm", ["install"], deployServerlessProject);
@@ -86,7 +85,7 @@ function getLambdaFunctionArn(result) {
 
             // add this arn to the intents as they both need to know which function to invoke when Lex uses them
             intents.forEach((intent) => {
-                intent.fulfillmentActivity.codeHook.uri = holibotFunctionHandlerArn
+                intent.fulfillmentActivity.codeHook.uri = holibotFunctionHandlerArn;
             });
             deployLexObjects();
         }

@@ -26,9 +26,6 @@ exports.resolveUserId = function (slackUser) {
             // now we have the email address of the slack user, look up that user's id in TimeTastic
             var url = endpoint + "users";
             baseRequest.get(url, {}, function (error, response, body) {
-                //console.log("Error: " + JSON.stringify(error));
-                //console.log("body: " + JSON.stringify(body));
-                //console.log("response:" + JSON.stringify(response));
                 if (response.statusCode === 200) {
 
                     // body will now be an array of users for the team, so look up the id of the one with our email address
@@ -69,7 +66,7 @@ exports.bookHoliday = function (userId, slots, callback, close, outputSessionAtt
             content: body.response
         }));
     });
-}
+};
 
 exports.getHolidaysForUser = function (userId, slots, callback, close, outputSessionAttributes) {
     var url = endpoint + "holidays?userids=" + userId + "&start=" + moment().format("YYYY-MM-DD");
@@ -83,8 +80,7 @@ exports.getHolidaysForUser = function (userId, slots, callback, close, outputSes
         if (response.statusCode === 200) {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
                 contentType: 'PlainText',
-                content: Formatters.holidayList(JSON.parse(body).holidays) +
-                `\n\nIf you would like to modify one of these bookings enter *modify <id>*`
+                content: Formatters.holidayList(JSON.parse(body).holidays)
             }));
         } else {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
@@ -93,6 +89,29 @@ exports.getHolidaysForUser = function (userId, slots, callback, close, outputSes
             }));
         }
     });
-}
-//ae34cf8b-ad90-42d4-87b1-ba8ea93841ea
-//xoxp-59333733587-76497075795-206011889443-a093835ac6fea1c2c901cb7642eff891
+};
+
+exports.getAllowanceForUser = function (userId, callback, close, outputSessionAttributes) {
+    var url = endpoint + "user/" + userId;
+
+    console.log("GET: " + url);
+
+    baseRequest.get(url, function (error, response, body) {
+        console.log("Error: " + JSON.stringify(error));
+        console.log("body: " + body);
+
+        var allowances = JSON.parse(body).allowances[0];
+
+        if (response.statusCode === 200) {
+            callback(null, close(outputSessionAttributes, 'Fulfilled', {
+                contentType: 'PlainText',
+                content: Formatters.allowances(allowances.remaining, JSON.parse(body).allowanceUnit, 'remaining') + ' for the year.'
+            }));
+        } else {
+            callback(null, close(outputSessionAttributes, 'Fulfilled', {
+                contentType: 'PlainText',
+                content: 'Sorry there was an error retrieving your allowance'
+            }));
+        }
+    });
+};

@@ -44,4 +44,23 @@ exports.holidayList = function (holidays) {
             });
         return response;
     }
+};
+
+exports.allowance = function(n, units, type) {
+    var text = 'You have ';
+    switch (n) {
+        case 0: 
+            text += 'no ' + units;
+        break;
+
+        case 1: 
+            text += '1' + units.replace('s', '');
+        break;
+
+        default:
+            text += n.toString() + ' ' + units;
+        break;
+    }
+    text += ' ' + remaining;
+    return text;
 }
