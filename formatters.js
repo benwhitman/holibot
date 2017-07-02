@@ -10,8 +10,10 @@ function prettyDate(d) {
 /*
 Takes in a list of booked holidays and presents them as a list of holidays in a readable format
 grouped by status
+
+Optionally include " (id xxx)" after each row
 */
-exports.holidayList = function (holidays) {
+exports.holidayList = function (holidays, includeIds) {
     console.log(JSON.stringify(holidays));
     if (holidays.length === 0) {
         return "You have no planned holidays booked or in a pending status";
@@ -19,7 +21,6 @@ exports.holidayList = function (holidays) {
         var response = "You have the following holidays booked:\n";
         
         // filter out holidays in the past
-
         _.forEach(holidays,
             (holiday) => {
                 var holidayDurationDays = holiday.bookingUnit === "Hours" ? holiday.duration / 24 : holiday.duration;
@@ -40,7 +41,7 @@ exports.holidayList = function (holidays) {
                 var startDateFormatted = prettyDate(startDate);
                 var endDateFormatted = prettyDate(endDate);
 
-                response += `\n${holidayDuration}: ${startDateFormatted} to ${endDateFormatted} (id ${holiday.id})`;
+                response += `\n${holidayDuration}: ${startDateFormatted} to ${endDateFormatted} ` + (includeIds ? `(id ${holiday.id})` : ``);
             });
         return response;
     }
@@ -48,6 +49,8 @@ exports.holidayList = function (holidays) {
 
 exports.allowance = function(n, units, type) {
     var text = 'You have ';
+    units = units.toLowerCase();
+
     switch (n) {
         case 0: 
             text += 'no ' + units;
@@ -61,6 +64,6 @@ exports.allowance = function(n, units, type) {
             text += n.toString() + ' ' + units;
         break;
     }
-    text += ' ' + remaining;
+    text += ' ' + type;
     return text;
 }

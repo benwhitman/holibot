@@ -3,8 +3,6 @@
     "sampleUtterances": [
         "Which holidays do I have booked",
         "holidays",
-        "What's my allowance",
-        "How many days holiday do I have",
         "Which holidays are pending approval"
     ],
     "fulfillmentActivity": {

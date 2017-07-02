@@ -80,7 +80,7 @@ exports.getHolidaysForUser = function (userId, slots, callback, close, outputSes
         if (response.statusCode === 200) {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
                 contentType: 'PlainText',
-                content: Formatters.holidayList(JSON.parse(body).holidays)
+                content: Formatters.holidayList(JSON.parse(body).holidays, false)
             }));
         } else {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
@@ -92,7 +92,7 @@ exports.getHolidaysForUser = function (userId, slots, callback, close, outputSes
 };
 
 exports.getAllowanceForUser = function (userId, callback, close, outputSessionAttributes) {
-    var url = endpoint + "user/" + userId;
+    var url = endpoint + "users/" + userId;
 
     console.log("GET: " + url);
 
@@ -100,12 +100,12 @@ exports.getAllowanceForUser = function (userId, callback, close, outputSessionAt
         console.log("Error: " + JSON.stringify(error));
         console.log("body: " + body);
 
-        var allowances = JSON.parse(body).allowances[0];
+        var userDetail = JSON.parse(body);
 
         if (response.statusCode === 200) {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
                 contentType: 'PlainText',
-                content: Formatters.allowances(allowances.remaining, JSON.parse(body).allowanceUnit, 'remaining') + ' for the year.'
+                content: Formatters.allowance(userDetail.allowanceRemaining, userDetail.allowanceUnit, 'remaining') + ' for the year.'
             }));
         } else {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
