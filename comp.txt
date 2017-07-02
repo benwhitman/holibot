@@ -13,13 +13,14 @@ Architecture
 
 Holibot consists of a Lex bot, with intents for requesting time off and checking available holidays.
 
-Problems encountered
+Challenges encountered
 
 The actual construction of the bot model in Lex was quite simple because the interactions were fairly straightfoward. Most of the
 challenges in this project came from writing a script to actually deploy it. I had chosen the Serverless framework for packaging
 my Lambda handler function, but unfortunately Serverless does not support deploying Lex related objects.
 Neither does CloudFormation, so I had to write my own calls using the AWS SDK for Node.js to create the intents, bot and alias and apply the
 necessary permissions.
+
 
 Future plans
 

@@ -1,14 +1,5 @@
 {
-    "intents": [
-        {
-            "intentVersion": "$LATEST",
-            "intentName": "CheckMyHolidays"
-        },
-        {
-            "intentVersion": "$LATEST",
-            "intentName": "RequestTimeOff"
-        }
-    ],
+    "intents": [],
     "name": "Holibot",
     "locale": "en-US",
     "abortStatement": {

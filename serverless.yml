@@ -13,7 +13,6 @@ functions:
     environment:
       TimeTasticToken: ${file(./token.yml):timetastic}
       TimeTasticEndpoint: https://app.timetastic.co.uk/api/
-      SlackToken: ${file(./token.yml):slack}
 
     package:
       include:
