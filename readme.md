@@ -26,8 +26,10 @@ First install the AWS command line utility, and configure it with an appropriate
 * In Slack create an application according to instructions [here](http://docs.aws.amazon.com/lex/latest/dg/slack-bot-assoc-create-app.html)
 * Clone this repository and run the command
 
+```
 npm install
 node setup -t <your TimeTastic API token> 
+```
 
 You can get your Timetastic token here (having logged in already): [here](http://api.timetastic.com). 
 
@@ -40,4 +42,8 @@ When the installation is complete you will have a bot configured for your TimeTa
 * Add this token as an extra environment variable to the AWS Lambda function holibot-prod-handler called SlackToken.
 * Back in your Slack app page under *Settings* > *Manage Distribution* click the 'Add to Slack' button.
 
+> Note: Users' email addresses must be the same in Slack as they are in Timetastic for Holibot to work.
+
+`
 aws lambda update-function-configuration --environment "Variables={SlackToken=<your Slack Oauth token>}" --function-name holibot-prod-handler
+`
