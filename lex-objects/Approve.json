@@ -1,0 +1,34 @@
+{
+    "fulfillmentActivity": {
+        "type": "CodeHook",
+        "codeHook": {
+            "uri": "this-will-get-replaced-by-the-setup-script",
+            "messageVersion": "1.0"
+        }
+    },
+    "sampleUtterances": [
+        "Approve holidays for {EmployeeName}",
+        "Approve all holidays for {EmployeeName}",
+        "Approve all for {EmployeeName}"
+    ],
+    "slots": [
+        {
+            "slotType": "EmployeeNames",
+            "sampleUtterances": [],
+            "priority": 1,
+            "name": "EmployeeName",
+            "slotConstraint": "Required",
+            "valueElicitationPrompt": {
+                "maxAttempts": 2,
+                "messages": [
+                    {
+                        "content": "For whom?",
+                        "contentType": "PlainText"
+                    }
+                ]
+            },
+            "slotTypeVersion": "$LATEST"
+        }
+    ],
+    "name": "Approve"
+}

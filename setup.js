@@ -3,26 +3,31 @@ Holibot installer
 
 This script will deploy the holibot resources to your AWS account
 */
-var program = require('commander');
-var promptly = require('promptly');
-var fs = require('fs');
-var async = require('async');
 
+// AWS
 var AWS = require('aws-sdk');
 var Lambda = new AWS.Lambda({ region: 'us-east-1' });
 var Lex = new AWS.LexModelBuildingService({ region: 'us-east-1' });
 
-// set the region - it's fixed as Lex only exists in one region for now
-AWS.config.update({ region: 'us-east-1' });
+// Other
+var fs = require('fs');
+var program = require('commander');
+var promptly = require('promptly');
+var async = require('async');
+var request = require('request');
+var _ = require('lodash');
 
-// the name of the lambda function that acts as a handler for all Holibot intents
-const holibotFunctionHandler = "holibot-prod-handler";
+// import task functions
+const Arn = require('./app/arn');
+const Bot = require('./app/bot');
+const SlotTypes = require('./app/slotTypes');
+const Static = require('./app/static');
 
-// the configured intents for this bot
-var intents = [];
-intents.push(JSON.parse(fs.readFileSync("./lex-objects/CheckMyHolidays.json", 'utf-8')));
-intents.push(JSON.parse(fs.readFileSync("./lex-objects/RequestTimeOff.json", 'utf-8')));
-intents.push(JSON.parse(fs.readFileSync("./lex-objects/CheckAllowance.json", 'utf-8')));
+// read the configured intents for this bot from the local JSON files
+Static.loadIntents();
+const intents = Static.intents;
+const holibotFunctionHandler = Static.holibotFunctionHandler;
+const slotTypes = Static.loadSlotTypes();
 
 var holibotFunctionHandlerArn;
 var accountId;
@@ -43,7 +48,7 @@ else {
 }
 
 // generic function to execute a shell command and return the stdout
-function run(cmd, args) {
+function run(cmd, args, callback) {
     var spawn = require('child_process').spawn;
     var command = spawn(cmd, args);
     var result = '';
@@ -55,7 +60,7 @@ function run(cmd, args) {
         console.log('Failed to start child process: ' + err);
     });
     command.on('close', function (code) {
-        return result;
+        callback(null);
     });
 }
 
@@ -71,7 +76,23 @@ function deploy(timeTasticToken) {
             .concat([deployServerlessProject])
 
             // get the AWS ARN of the created lambda function
-            .concat([getLambdaFunctionArn])
+            .concat([Arn.getLambdaFunctionArn])
+
+            // delete any previously existing Holibot slot types
+            .concat(
+            slotTypes.map((slotType) => (callback) => {
+                try {
+                    console.log("Deleting existing Holibot slot type " + slotType.name);
+                    Lex.deleteSlotType({ name: slotType.name }, (err, data) => callback(null));
+                }
+                catch (error) {
+                    console.log('Could not delete slot type ' + slotType.name + ': ' + error);
+                }
+            })
+            )
+
+            // create the employee name slot type
+            .concat([async.apply(SlotTypes.populateEmployeeNameSlotType, timeTasticToken, slotTypes)])
 
             // delete any previously existing Holibot intents (we're going to recreate them)
             .concat(
@@ -102,10 +123,10 @@ function deploy(timeTasticToken) {
                 deleteBotAlias,
 
                 // delete the previously existing bot
-                deleteBot,
+                async.apply(Bot.deleteBot, program.refreshIntentsOnly),
 
                 // create the bot
-                createBot,
+                async.apply(Bot.createBot, program.refreshIntentsOnly, intents),
 
                 // wait until AWS has finished building the bot
                 waitForBotProvision,
@@ -135,55 +156,11 @@ function deploy(timeTasticToken) {
 Execute an sls deploy for the project to package up and deploy the Lambda function.
 */
 function deployServerlessProject(callback) {
-    console.log("Deploying Serverless project to AWS. This will create a stack in us-east-1 named holibot. Note your provided token are saved to ./token.yml. You may wish to delete them.");
+    console.log("Deploying Serverless project to AWS. This will create a stack in us-east-1 named holibot. Note your provided token is saved to ./token.yml. You may wish to delete this after installation is complete.");
 
     if (!program.refreshIntentsOnly) {
-        run("sls.cmd", ["deploy", "--stage", "prod", "--region", "us-east-1"]);
-    }
-    callback(null);
-}
-
-/*
-Get the ARN of the Lambda function created from the Serverless deployment and set this as the code hook
-for each of the intents (i.e. they share the same code hook function).
-*/
-function getLambdaFunctionArn(callback) {
-
-    console.log("Getting the ARN of the Holibot Lambda function handler");
-
-    Lambda.getFunction({ FunctionName: holibotFunctionHandler }, (err, data) => {
-        holibotFunctionHandlerArn = data.Configuration.FunctionArn;
-        console.log("* " + holibotFunctionHandlerArn);
-
-        // add this arn to the intents as they both need to know which function to invoke when Lex uses them
-        intents.forEach((intent) => {
-            intent.fulfillmentActivity.codeHook.uri = holibotFunctionHandlerArn;
-        });
-
-        callback(null);
-    });
-}
-
-/*
-Create the bot
-*/
-function createBot(callback) {
-    if (!program.refreshIntentsOnly) {
-        console.log("Creating bot");
-        // get the bot object, which starts out in the local ./lex-objects/bot.json file but needs
-        // to be added to depending on which intents we are creating
-        var bot = JSON.parse(fs.readFileSync('./lex-objects/bot.json', 'utf-8'));
-        intents.forEach((intent) => {
-            bot.intents.push({
-                "intentVersion": "$LATEST",
-                "intentName": intent.name
-            });
-        });
-        Lex.putBot(bot, (err, data) => {
-            callback(null);
-        });
+        run("sls.cmd", ["deploy", "--stage", "prod", "--region", "us-east-1"], callback);
     } else {
-        console.log("Skipping bot creation as --refresh-intents-only was specified");
         callback(null);
     }
 }
@@ -211,32 +188,6 @@ function deleteBotAlias(callback) {
     }
 }
 
-/*
-Delete an existing Holibot if it exists
-*/
-function deleteBot(callback) {
-    if (!program.refreshIntentsOnly) {
-        console.log("Deleting previous Holibot if necessary");
-
-        // delete existing bot and intents if they exist
-        Lex.getBot({ name: "Holibot", versionOrAlias: "$LATEST" },
-            (err, existingBot) => {
-                if (existingBot) {
-                    console.log("Holibot already exists - deleting");
-                    Lex.deleteBot({ name: existingBot.name },
-                        (err, data) => {
-                            console.log("existing bot deleted");
-                            callback(null);
-                        });
-                } else {
-                    callback(null);
-                }
-            });
-    } else {
-        console.log("Skipping deletion of previous bot as --refresh-intents-only was specified.");
-        callback(null);
-    }
-}
 
 /*
 Grant permissions for Lex to invoke the Lambda handler

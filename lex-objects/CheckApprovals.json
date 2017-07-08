@@ -1,0 +1,17 @@
+{
+    "sampleUtterances": [
+        "Which holidays are awaiting approval",
+        "What approvals are outstanding",
+        "Outstanding approvals",
+        "approvals"
+    ],
+    "name": "CheckApprovals",
+    "slots": [],
+    "fulfillmentActivity": {
+        "type": "CodeHook",
+        "codeHook": {
+            "messageVersion": "1.0",
+            "uri": "this-will-get-replaced-by-the-setup-script"
+        }
+    }
+}

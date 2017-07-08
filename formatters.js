@@ -12,11 +12,12 @@ Takes in a list of booked holidays and presents them as a list of holidays in a 
 grouped by status
 
 Optionally include " (id xxx)" after each row
+Optionally include " - (user)" after each row (this is for approvals where the holidays will be for multiple people)
 */
-exports.holidayList = function (holidays, includeIds) {
+exports.holidayList = function (holidays, includeIds, includeUsers, noMatchingHolidaysText) {
     console.log(JSON.stringify(holidays));
     if (holidays.length === 0) {
-        return "You have no planned holidays booked or in a pending status";
+        return noMatchingHolidaysText || "You have no planned holidays booked or in a pending status";
     } else {
         var response = "You have the following holidays booked:\n";
         
@@ -41,8 +42,10 @@ exports.holidayList = function (holidays, includeIds) {
                 var startDateFormatted = prettyDate(startDate);
                 var endDateFormatted = prettyDate(endDate);
 
-                response += `\n${holidayDuration}: ${startDateFormatted} to ${endDateFormatted} ` + (includeIds ? `(id ${holiday.id})` : ``);
-            });
+                response += `\n${holidayDuration}: ${startDateFormatted} to ${endDateFormatted} ` + 
+                (includeIds ? `(id ${holiday.id})` : ``) + 
+                (includeUsers ? ` - ${holiday.userName}` : ``);
+        });
         return response;
     }
 };

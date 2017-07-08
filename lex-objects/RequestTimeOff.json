@@ -8,6 +8,7 @@
         "I'd like some time off from {StartDate} to {EndDate}",
         "I need a holiday"
     ],
+    "name": "RequestTimeOff",
     "conclusionStatement": {
         "messages": [
             {
@@ -16,10 +17,29 @@
             }
         ]
     },
+    "confirmationPrompt": {
+        "maxAttempts": 3,
+        "messages": [
+            {
+                "content": "Just to check, you would like time off between {StartDate} and {EndDate} inclusive? Weekends and public holidays will not be counted.",
+                "contentType": "PlainText"
+            }
+        ]
+    },
+    "fulfillmentActivity": {
+        "codeHook": {
+            "messageVersion": "1.0",
+            "uri": "this-will-get-replaced-by-the-setup-script"
+        },
+        "type": "CodeHook"
+    },
     "slots": [
         {
-            "slotConstraint": "Required",
             "sampleUtterances": [],
+            "name": "StartDate",
+            "slotType": "AMAZON.DATE",
+            "slotConstraint": "Required",
+            "priority": 1,
             "valueElicitationPrompt": {
                 "maxAttempts": 2,
                 "messages": [
@@ -28,14 +48,14 @@
                         "contentType": "PlainText"
                     }
                 ]
-            },
-            "priority": 1,
-            "name": "StartDate",
-            "slotType": "AMAZON.DATE"
+            }
         },
         {
-            "slotConstraint": "Required",
             "sampleUtterances": [],
+            "name": "EndDate",
+            "slotType": "AMAZON.DATE",
+            "slotConstraint": "Required",
+            "priority": 2,
             "valueElicitationPrompt": {
                 "maxAttempts": 2,
                 "messages": [
@@ -44,18 +64,15 @@
                         "contentType": "PlainText"
                     }
                 ]
-            },
-            "priority": 2,
-            "name": "EndDate",
-            "slotType": "AMAZON.DATE"
+            }
         }
     ],
-    "fulfillmentActivity": {
-        "type": "CodeHook",
-        "codeHook": {
-            "messageVersion": "1.0",
-            "uri": "this-will-get-replaced-by-the-setup-script"
-        }
-    },
-    "name": "RequestTimeOff"
+    "rejectionStatement": {
+        "messages": [
+            {
+                "content": "Okay, your booking request is cancelled.",
+                "contentType": "PlainText"
+            }
+        ]
+    }
 }

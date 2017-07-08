@@ -1,5 +1,5 @@
 My submission for the Chatbot competition is a service which allows users of the popular annual leave booking system TimeTastic
-to interact with the api using Slack.
+to interact with it's API using Slack.
 
 The goals of the project were to be able to allow users to quickly see how much time off they had for the year etc., and to request
 new holidays.
@@ -9,25 +9,50 @@ because accessing TimeTastic requires an API token and I didn't want to have to 
 However, this makes deploying the bot much more complicated. I like a challenge though, and have found a way to deploy all the necessary
 objects to AWS from a Node.js script.
 
+Functionality
+
+Holibot provides the following intents
+* CheckAllowance *"How many days holiday do I have?"*
+* CheckMyHolidays *"What holidays do I have booked?"*
+* RequestTimeOff *"I need a holiday from Tuesday to 13th August"*
+* CheckApprovals *"What approvals are outstanding?"*
+* Approve *"Approve all [Alice's|Bob's|Colin's] holidays"*
+
 Architecture
 
-Holibot consists of a Lex bot, with intents for requesting time off and checking available holidays.
+This repo contains a setup script with accompanying files to create the following objects in AWS:
+* 5 Lex intents to cover the functionality above
+* A slot type for employee names which is dynamically gathered upon startup
+* A single Lambda function, which handles all of the intents
+* The Lex bot itself
+* Any necessary permissions on AWS
+
+The (Node.js) setup script uses the following technologies to deploy Holibot:
+* *async* to handle executing all the various asynchronous deployment steps synchronously in order
+* *commander* and *promptly* to handle the command line options and validation
+* *lodash* to perform various filtering and processing of collections
+* the *serverless* framework to package up and deploy all the javascript files which make up the AWS Lambda hander function. 
+* the AWS Node.js SDK (of course)
 
 Challenges encountered
 
-The actual construction of the bot model in Lex was quite simple because the interactions were fairly straightfoward. Most of the
-challenges in this project came from writing a script to actually deploy it. I had chosen the Serverless framework for packaging
+I was suprised to find that the actual construction of the bot model in Lex was relatively straightforward once I had
+figured out the best ways to answer the various questions and interact accordingly with the Timetastic API.
+The hardest challenges in this project came from writing a script to actually deploy the bot. I had chosen the Serverless framework for packaging
 my Lambda handler function, but unfortunately Serverless does not support deploying Lex related objects.
 Neither does CloudFormation, so I had to write my own calls using the AWS SDK for Node.js to create the intents, bot and alias and apply the
-necessary permissions.
-
+necessary permissions, as well as taking care of removing previous intents, aliases and bots in case the user was re-deploying.
 
 Future plans
 
-I'd like to add the ability for approvers to approve or reject holiday requests.
+Currently the setup script generates a slot type in Lex for the employee names in the company which is used by
+the Approve intent so an approver can say "Approve all holidays for Bob". Obviously the list of names in an organisation
+changes, so a clear improvement would be to add another Lambda function, scheduled to run daily which queried
+the current slot values in Lex and compares this with the up to date user list in TimeTastic. If there are any changes,
+A new slot type version could be added and the bot rebuilt accordingly.
 
 What could have made this easier?
 
-Support for Lex in CloudFormation (this would have simplified my deployment script)
+Support for Lex in CloudFormation (this would have greatly simplified my deployment script)
 An AWS CLI command aws cli lex-models put-bot-channel-association (without this the user has to do an extra manual step in the AWS console).
 

@@ -27,6 +27,15 @@ function close(sessionAttributes, fulfillmentState, message, responseCard) {
 }
 
 // -------------------- intents ----------------------- //
+function approve(intentRequest, slackUser, callback) {
+    const outputSessionAttributes = intentRequest.sessionAttributes || {};
+
+    // get the selected employee name from the slot
+    var employeeName = intentRequest.currentIntent.slots.EmployeeName;
+
+
+}
+
 function checkAllowance(intentRequest, slackUser, callback) {
     const outputSessionAttributes = intentRequest.sessionAttributes || {};
 
@@ -36,6 +45,12 @@ function checkAllowance(intentRequest, slackUser, callback) {
 
             Timetastic.getAllowanceForUser(userId, callback, close, outputSessionAttributes);
         });
+}
+
+function checkApprovals(intentRequest, callback) {
+    const outputSessionAttributes = intentRequest.sessionAttributes || {};
+
+    Timetastic.getApprovals(callback, close, outputSessionAttributes);
 }
 
 function checkMyHolidays(intentRequest, slackUser, callback) {
@@ -73,11 +88,14 @@ function requestTimeOff(intentRequest, slackUser, callback) {
 function handleIntent(intentRequest, callback) {
     console.log(`handleIntent userId=${intentRequest.userId}, intent=${intentRequest.currentIntent.name}`);
     console.log("intent: " + JSON.stringify(intentRequest));
-    
+
     // extract the Slack user id from the used id in the AWS Lex intentRequest
     var slackUser = intentRequest.userId.split(":")[2];
 
     switch (intentRequest.currentIntent.name) {
+        case 'Approve':
+            return approve(intentRequest, slackUser, callack);
+
         case 'RequestTimeOff':
             return requestTimeOff(intentRequest, slackUser, callback);
 
@@ -86,6 +104,9 @@ function handleIntent(intentRequest, callback) {
 
         case 'CheckAllowance':
             return checkAllowance(intentRequest, slackUser, callback);
+
+        case 'CheckApprovals':
+            return checkApprovals(intentRequest, callback);
 
         default:
             throw new Error(`Intent with name ${name} not supported`);
