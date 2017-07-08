@@ -71,6 +71,8 @@ exports.bookHoliday = function (userId, slots, callback, close, outputSessionAtt
     var leaveRequest = {
         "from": slots.startDate,
         "to": slots.endDate,
+        "fromTime": "AM",
+        "toTime": "PM",
         "leaveTypeId": 122848,
         "reason": "Holiday",
         "userOrDepartmentId": userId,
