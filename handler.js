@@ -27,12 +27,15 @@ function close(sessionAttributes, fulfillmentState, message, responseCard) {
 }
 
 // -------------------- intents ----------------------- //
-function approve(intentRequest, slackUser, callback) {
+function approve(intentRequest, callback) {
     const outputSessionAttributes = intentRequest.sessionAttributes || {};
 
-    // get the selected employee name from the slot
-    var employeeName = intentRequest.currentIntent.slots.EmployeeName;
+    // get the selected holiday id from the slot
+    var holidayId = intentRequest.currentIntent.slots.HolidayId;
 
+    console.log("Approving holiday id " + holidayId);
+
+    callback(null);
 
 }
 
@@ -94,7 +97,7 @@ function handleIntent(intentRequest, callback) {
 
     switch (intentRequest.currentIntent.name) {
         case 'Approve':
-            return approve(intentRequest, slackUser, callack);
+            return approve(intentRequest, callback);
 
         case 'RequestTimeOff':
             return requestTimeOff(intentRequest, slackUser, callback);

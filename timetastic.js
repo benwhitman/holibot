@@ -78,7 +78,7 @@ exports.bookHoliday = function (userId, slots, callback, close, outputSessionAtt
         "userOrDepartmentId": userId,
         "bookFor": "User",
         "suppressEmails": false,
-        "override": true
+        "override": false
     };
 
     var url = endpoint + "holidays";
@@ -156,7 +156,8 @@ exports.getApprovals = function (callback, close, outputSessionAttributes) {
         if (response.statusCode === 200) {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
                 contentType: 'PlainText',
-                content: Formatters.holidayList(JSON.parse(body).holidays, false, true, 'There are no outstanding approvals')
+                content:
+                Formatters.holidayList(JSON.parse(body).holidays, true, true, 'Bookings awaiting approval', 'There are no outstanding approvals', 'To approve a holiday, type approve <id> using the id from the above list')
             }));
         } else {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {

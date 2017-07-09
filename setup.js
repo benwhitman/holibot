@@ -20,14 +20,13 @@ var _ = require('lodash');
 // import task functions
 const Arn = require('./app/arn');
 const Bot = require('./app/bot');
-const SlotTypes = require('./app/slotTypes');
+const Intent = require('./app/intent');
 const Static = require('./app/static');
 
 // read the configured intents for this bot from the local JSON files
 Static.loadIntents();
 const intents = Static.intents;
 const holibotFunctionHandler = Static.holibotFunctionHandler;
-const slotTypes = Static.loadSlotTypes();
 
 var holibotFunctionHandlerArn;
 var accountId;
@@ -36,6 +35,7 @@ program
     .version('1.0.0')
     .option('-t, --timetastic-token [value]')
     .option('-i, --refresh-intents-only')
+    .option('-s, --skip-serverless')
     .parse(process.argv);
 
 console.log("Holibot installer.");
@@ -70,86 +70,50 @@ function deploy(timeTasticToken) {
 
     // execute each operation in sequence
     async.waterfall(
-        []
+        // create the serverless project in AWS (i.e. the lambda function)
+        (!program.skipServerless ? [deployServerlessProject] : [])
 
-            // create the serverless project in AWS (i.e. the lambda function)
-            .concat([deployServerlessProject])
+        .concat([
+        
+        // get the AWS ARN of the created lambda function
+        Arn.getLambdaFunctionArn,
 
-            // get the AWS ARN of the created lambda function
-            .concat([Arn.getLambdaFunctionArn])
+        // create or replace intents
+        async.apply(Intent.replaceAll, intents),
 
-            // delete any previously existing Holibot slot types
-            .concat(
-            slotTypes.map((slotType) => (callback) => {
-                try {
-                    console.log("Deleting existing Holibot slot type " + slotType.name);
-                    Lex.deleteSlotType({ name: slotType.name }, (err, data) => callback(null));
-                }
-                catch (error) {
-                    console.log('Could not delete slot type ' + slotType.name + ': ' + error);
-                }
-            })
-            )
+        // add permissions for Lex to call Lambda
+        addPermission,
 
-            // create the employee name slot type
-            .concat([async.apply(SlotTypes.populateEmployeeNameSlotType, timeTasticToken, slotTypes)])
+        // delete the previously existing bot alias
+        deleteBotAlias,
 
-            // delete any previously existing Holibot intents (we're going to recreate them)
-            .concat(
-            intents.map((intent) => (callback) => {
-                try {
-                    Lex.deleteIntent({ name: intent.name }, (err, data) => callback(null));
-                }
-                catch (error) {
-                    console.log('Could not delete ' + intent.name + ': ' + error);
-                }
-            })
-            )
+        // delete the previously existing bot
+        async.apply(Bot.deleteBot, program.refreshIntentsOnly),
 
-            // create each intent
-            .concat(
-            intents.map((intent) => (callback) => {
-                console.log("Creating intent: " + intent.name);
-                Lex.putIntent(intent, (err, data) => callback(null));
-            })
-            )
+        // create the bot
+        async.apply(Bot.createBot, program.refreshIntentsOnly, intents),
 
-            .concat([
+        // wait until AWS has finished building the bot
+        waitForBotProvision,
 
-                // add permissions for Lex to call Lambda
-                addPermission,
-
-                // delete the previously existing bot alias
-                deleteBotAlias,
-
-                // delete the previously existing bot
-                async.apply(Bot.deleteBot, program.refreshIntentsOnly),
-
-                // create the bot
-                async.apply(Bot.createBot, program.refreshIntentsOnly, intents),
-
-                // wait until AWS has finished building the bot
-                waitForBotProvision,
-
-                // create the alias
-                createBotAlias
-            ]), (err, results) => {
-                if (err) {
-
-                    console.log("There was an error executing one of the setup steps: " + err);
-                    process.exit();
-                } else {
-                    console.log("All done. Now you need to do the following:");
-                    console.log("1. Follow the AWS instructions to create an app in Slack: http://docs.aws.amazon.com/lex/latest/dg/slack-bot-assoc-create-app.html");
-                    console.log("2. Then follow these steps to add a channel association to Slack in AWS: http://docs.aws.amazon.com/lex/latest/dg/slack-bot-assoc-create-assoc.html");
-                    console.log("   As well as the Slack permissions mentioned in the AWS instructions, you need to add users:read and users:read.email.");
-                    console.log("3. Visit https://api.slack.com/apps/");
-                    console.log("4. Select the app you created and click Manage Distribution > Add to Slack");
-                    console.log("5. Capture the OAuth access token from Slack and find your Lambda function in the AWS console");
-                    console.log("6. Add an environment variable to the Lambda function called SlackToken containing the OAuth access token value from Slack.");
-                    console.log("You should be good to start chatting!");
-                }
-            });
+        // create the alias
+        createBotAlias
+    ]), (err, results) => {
+        if (err) {
+            console.log("There was an error executing one of the setup steps: " + err);
+            process.exit();
+        } else {
+            console.log("All done. Now you need to do the following:");
+            console.log("1. Follow the AWS instructions to create an app in Slack: http://docs.aws.amazon.com/lex/latest/dg/slack-bot-assoc-create-app.html");
+            console.log("2. Then follow these steps to add a channel association to Slack in AWS: http://docs.aws.amazon.com/lex/latest/dg/slack-bot-assoc-create-assoc.html");
+            console.log("   As well as the Slack permissions mentioned in the AWS instructions, you need to add users:read and users:read.email.");
+            console.log("3. Visit https://api.slack.com/apps/");
+            console.log("4. Select the app you created and click Manage Distribution > Add to Slack");
+            console.log("5. Capture the OAuth access token from Slack and find your Lambda function in the AWS console");
+            console.log("6. Add an environment variable to the Lambda function called SlackToken containing the OAuth access token value from Slack.");
+            console.log("You should be good to start chatting!");
+        }
+    });
 }
 
 /*

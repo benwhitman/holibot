@@ -7,27 +7,25 @@
         }
     },
     "sampleUtterances": [
-        "Approve holidays for {EmployeeName}",
-        "Approve all holidays for {EmployeeName}",
-        "Approve all for {EmployeeName}"
+        "Approve {HolidayId}",
+        "Approve booking {HolidayId}"
     ],
     "slots": [
         {
-            "slotType": "EmployeeNames",
+            "slotType": "AMAZON.NUMBER",
             "sampleUtterances": [],
             "priority": 1,
-            "name": "EmployeeName",
+            "name": "HolidayId",
             "slotConstraint": "Required",
             "valueElicitationPrompt": {
                 "maxAttempts": 2,
                 "messages": [
                     {
-                        "content": "For whom?",
+                        "content": "Which booking id do you wish to approve? (say 'Check Approvals' to see outstanding approvals)",
                         "contentType": "PlainText"
                     }
                 ]
-            },
-            "slotTypeVersion": "$LATEST"
+            }
         }
     ],
     "name": "Approve"

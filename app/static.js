@@ -12,13 +12,3 @@ exports.loadIntents = function () {
 
 // the name of the lambda function that acts as a handler for all Holibot intents
 exports.holibotFunctionHandler = "holibot-prod-handler";
-
-exports.loadSlotTypes = function() {
-    var slotTypes = [
-        { 
-            name: 'EmployeeNames', 
-            description: 'A list of all the unique first name and firstname/lastname combiniations of the employees from Timetastic' 
-        }
-    ];
-    return slotTypes;
-};

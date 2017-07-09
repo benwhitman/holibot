@@ -14,12 +14,12 @@ grouped by status
 Optionally include " (id xxx)" after each row
 Optionally include " - (user)" after each row (this is for approvals where the holidays will be for multiple people)
 */
-exports.holidayList = function (holidays, includeIds, includeUsers, noMatchingHolidaysText) {
+exports.holidayList = function (holidays, includeIds, includeUsers, headingText, noMatchingHolidaysText, footerText) {
     console.log(JSON.stringify(holidays));
     if (holidays.length === 0) {
         return noMatchingHolidaysText || "You have no planned holidays booked or in a pending status";
     } else {
-        var response = "You have the following holidays booked:\n";
+        var response = headingText || "You have the following holidays booked:\n";
         
         // filter out holidays in the past
         _.forEach(holidays,
@@ -45,6 +45,10 @@ exports.holidayList = function (holidays, includeIds, includeUsers, noMatchingHo
                 response += `\n${holidayDuration}: ${startDateFormatted} to ${endDateFormatted} ` + 
                 (includeIds ? `(id ${holiday.id})` : ``) + 
                 (includeUsers ? ` - ${holiday.userName}` : ``);
+
+                if (footerText) {
+                    response += `\n${footerText}`;
+                }
         });
         return response;
     }
