@@ -168,65 +168,27 @@ exports.getApprovals = function (callback, close, outputSessionAttributes) {
     });
 };
 
-// approve a specific holiday
-function approveHoliday(holiday, callback) {
-    console.log("Approving holiday id " + holiday.id);
-
-    var url = endpoint + "holdiays/" + holiday.id + "&holidayUpdateAction=Approve";
+/*
+Approve the specified holiday id.
+*/
+exports.approve = function (holidayId, callback, close, outputSessionAttributes) {
+    var url = endpoint + "holidays/" + holidayId + "?holidayUpdateAction=Approve";
     var approvalRequest = {
         reason: 'Approved via Holibot',
         suppressEmails: false
     };
 
-    baseRequest.post(url, approvalRequest, function (error, response, body) {
-        if (response.statusCode === 200) {
-            console.log("Holiday " + holiday.id + " approved successfully");
-            callback();
-        } else {
-            console.error("Error approving holiday id " + holiday.id);
-            callback(body.message);
-        }
+    console.log("Approving holiday " + holidayId + " with url: " + url);
+
+    baseRequest.post(url, { json: approvalRequest }, function (error, response, body) {
+
+        console.log("Error: " + JSON.stringify(error));
+        console.log("body: " + JSON.stringify(body));
+
+        callback(null, close(outputSessionAttributes, 'Fulfilled', {
+            contentType: 'PlainText',
+            content: body.message
+        }));
+
     });
-};
-
-/*
-Approve all holidays for the user [name] which should refer to a firstname or a firstname + ' ' + surname
-in the team.
-*/
-exports.approve = function (name, callback, close, outputSessionAttributes) {
-    resolveUserIdFromName(name)
-        .then((userId) => {
-            // get all holidays for this user
-            var url = endpoint + "holidays?status=Pending&userids=" + userId;
-
-            baseRequest.get(url, function (error, response, body) {
-                if (response.statusCode === 200) {
-                    var holidays = JSON.parse(body).holidays;
-
-                    // first verify that there are some outstanding holidays for this user
-                    if (holidays === []) {
-                        callback(null, close(outputSessionAttributes, 'Fulfilled', {
-                            contentType: 'PlainText',
-                            content: 'There are no pending holiday bookings for ' + name
-                        }));
-                    } else {
-                        // for each booking, submit an approve api call
-                        async.each(holidays, approveHoliday, function (err) {
-                            console.log("Could not approve one on more holidays");
-                            callback(null);
-                        });
-
-                        callback(null, close(outputSessionAttributes, 'Fulfilled', {
-                            contentType: 'PlainText',
-                            content: 'All holidays approved for ' + name
-                        }));
-                    }
-                } else {
-                    callback(null, close(outputSessionAttributes, 'Fulfilled', {
-                        contentType: 'PlainText',
-                        content: body.response
-                    }));
-                }
-            });
-        });
 };

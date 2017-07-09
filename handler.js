@@ -33,10 +33,7 @@ function approve(intentRequest, callback) {
     // get the selected holiday id from the slot
     var holidayId = intentRequest.currentIntent.slots.HolidayId;
 
-    console.log("Approving holiday id " + holidayId);
-
-    callback(null);
-
+    Timetastic.approve(holidayId, callback, close, outputSessionAttributes);
 }
 
 function checkAllowance(intentRequest, slackUser, callback) {
