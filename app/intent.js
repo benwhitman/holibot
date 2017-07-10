@@ -14,33 +14,48 @@ exports.replaceAll = async function (intents, callback) {
     // get the current intents in AWS
     try {
         var existingIntents = await Lex.getIntents().promise();
-
-        intents.forEach(async (intent) => {
+        var promises = [];
+        intents.forEach((intent) => {
             console.log("Looking for " + intent.name);
 
             var foundIntent = _.find(existingIntents.intents, (i) => i.name === intent.name);
             if (foundIntent) {
-                // ok the intent exists, so get the checksum
-                var existingIntent = await Lex.getIntent({ name: intent.name, version: '$LATEST' }).promise();
+                promises.push(new Promise((resolve, reject) => {
+                    // ok the intent exists, so get the checksum
+                    Lex.getIntent({ name: intent.name, version: '$LATEST' },
+                        (err, existingIntent) => {
 
-                console.log("Found " + intent.name + ", checksum: " + existingIntent.checksum);
+                            console.log("Found " + intent.name + ", checksum: " + existingIntent.checksum);
 
-                // replace the intent
-                await Lex.putIntent(Object.assign(intent, { checksum: existingIntent.checksum })).promise();
-                console.log(intent.name + " replaced.");
-                return;
+                            // replace the intent
+                            Lex.putIntent(Object.assign(intent, { checksum: existingIntent.checksum }),
+                                (err, result) => {
+                                    if (err) {
+                                        return reject(err);
+                                    } else {
+                                        console.log(intent.name + " replaced.");
+                                        return resolve();
+                                    }
+                                });
+                        });
+                })
+                );
             } else {
                 // create the intent
-                await Lex.putIntent(intent).promise();
+                promises.push(Lex.putIntent(intent).promise());
                 console.log(intent.name + " created.");
-                return;
             }
         });
 
-        callback(null);
+        Promise.all(promises)
+            .then(() => {
+                callback(null);
+            })
+            .catch((err) => {
+                callback(err);
+            });
     }
     catch (error) {
         callback(error);
     }
-
 };

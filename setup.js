@@ -70,50 +70,54 @@ function deploy(timeTasticToken) {
 
     // execute each operation in sequence
     async.waterfall(
-        // create the serverless project in AWS (i.e. the lambda function)
+        // create the serverless project in AWS (i.e. the lambda function) unless overridden at the command line
         (!program.skipServerless ? [deployServerlessProject] : [])
 
-        .concat([
-        
-        // get the AWS ARN of the created lambda function
-        Arn.getLambdaFunctionArn,
+            .concat([
+                // get the AWS ARN of the created lambda function
+                Arn.getLambdaFunctionArn,
 
-        // create or replace intents
-        async.apply(Intent.replaceAll, intents),
+                // create or replace intents
+                async.apply(Intent.replaceAll, intents),
 
-        // add permissions for Lex to call Lambda
-        addPermission,
+                // add permissions for Lex to call Lambda
+                addPermission
+            ])
 
-        // delete the previously existing bot alias
-        deleteBotAlias,
+            // add tasks in the case that --refresh-intents-only was NOT specified
+            .concat(!program.refreshIntentsOnly ? [
 
-        // delete the previously existing bot
-        async.apply(Bot.deleteBot, program.refreshIntentsOnly),
+                // delete the previously existing bot alias
+                Bot.deleteBotAlias,
 
-        // create the bot
-        async.apply(Bot.createBot, program.refreshIntentsOnly, intents),
+                // delete the previously existing bot
+                Bot.deleteBot,
 
-        // wait until AWS has finished building the bot
-        waitForBotProvision,
+                // create the bot
+                async.apply(Bot.createBot, intents),
 
-        // create the alias
-        createBotAlias
-    ]), (err, results) => {
-        if (err) {
-            console.log("There was an error executing one of the setup steps: " + err);
-            process.exit();
-        } else {
-            console.log("All done. Now you need to do the following:");
-            console.log("1. Follow the AWS instructions to create an app in Slack: http://docs.aws.amazon.com/lex/latest/dg/slack-bot-assoc-create-app.html");
-            console.log("2. Then follow these steps to add a channel association to Slack in AWS: http://docs.aws.amazon.com/lex/latest/dg/slack-bot-assoc-create-assoc.html");
-            console.log("   As well as the Slack permissions mentioned in the AWS instructions, you need to add users:read and users:read.email.");
-            console.log("3. Visit https://api.slack.com/apps/");
-            console.log("4. Select the app you created and click Manage Distribution > Add to Slack");
-            console.log("5. Capture the OAuth access token from Slack and find your Lambda function in the AWS console");
-            console.log("6. Add an environment variable to the Lambda function called SlackToken containing the OAuth access token value from Slack.");
-            console.log("You should be good to start chatting!");
-        }
-    });
+                // wait until AWS has finished building the bot
+                Bot.waitForBotProvision,
+
+                // create the alias
+                Bot.createBotAlias
+            ] : []
+            ), (err, results) => {
+                if (err) {
+                    console.log("There was an error executing one of the setup steps: " + err);
+                    process.exit();
+                } else {
+                    console.log("All done. Now you need to do the following:");
+                    console.log("1. Follow the AWS instructions to create an app in Slack: http://docs.aws.amazon.com/lex/latest/dg/slack-bot-assoc-create-app.html");
+                    console.log("2. Then follow these steps to add a channel association to Slack in AWS: http://docs.aws.amazon.com/lex/latest/dg/slack-bot-assoc-create-assoc.html");
+                    console.log("   As well as the Slack permissions mentioned in the AWS instructions, you need to add users:read and users:read.email.");
+                    console.log("3. Visit https://api.slack.com/apps/");
+                    console.log("4. Select the app you created and click Manage Distribution > Add to Slack");
+                    console.log("5. Capture the OAuth access token from Slack and find your Lambda function in the AWS console");
+                    console.log("6. Add an environment variable to the Lambda function called SlackToken containing the OAuth access token value from Slack.");
+                    console.log("You should be good to start chatting!");
+                }
+            });
 }
 
 /*
@@ -128,30 +132,6 @@ function deployServerlessProject(callback) {
         callback(null);
     }
 }
-
-/*
-Delete an existing 'prod' alias for Holibot if it exists
-*/
-function deleteBotAlias(callback) {
-    if (!program.refreshIntentsOnly) {
-        console.log("Deleting previous Holibot prod alias if necessary");
-
-        try {
-            Lex.deleteBotAlias({ name: 'prod', botName: 'Holibot' }, () => {
-                console.log("Bot alias deleted");
-                callback(null);
-            });
-        }
-        catch (error) {
-            console.log("Error deleting previous alias: " + err);
-            callback(null);
-        }
-    } else {
-        console.log("Skipping deletion of previous bot alias as --refresh-intents-only.");
-        callback(null);
-    }
-}
-
 
 /*
 Grant permissions for Lex to invoke the Lambda handler
@@ -183,50 +163,4 @@ function makeid(n) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
 
     return text;
-}
-
-/*
-Keep checking for the existence of our bot and then call the supplied callback
-*/
-function waitForBotProvision(callback) {
-    if (!program.refreshIntentsOnly) {
-        setTimeout(() => {
-            var botCreated = Lex.getBot({
-                name: 'Holibot',
-                versionOrAlias: '$LATEST'
-            }, (err, bot) => {
-                console.log("Waiting for Holibot to be provisioned before creating the alias");
-
-                if (err) {
-                    waitForBotProvision(callback);
-                } else {
-                    // bot created, continue
-                    callback(null);
-                }
-            });
-        }, 2000);
-    } else {
-        console.log("--refresh-intents-only was specified so need to wait for a bot provisioning operation to happen.");
-        callback(null);
-    }
-}
-
-/*
-Create the 'prod' alias for the bot
-*/
-function createBotAlias(callback) {
-    if (!program.refreshIntentsOnly) {
-        console.log("Adding 'prod' alias for Holibot.");
-        Lex.putBotAlias({
-            name: 'prod',
-            botName: 'Holibot',
-            botVersion: '$LATEST'
-        }, (err, data) => {
-            console.log("Bot alias 'prod' created.");
-            callback(null);
-        });
-    } else {
-        console.log("--refresh-intents-only was specified, so we're not creating a bot alias.");
-        callback(null);
-    }
-}
+};
