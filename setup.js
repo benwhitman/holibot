@@ -88,7 +88,7 @@ function deploy(timeTasticToken) {
             .concat(!program.refreshIntentsOnly ? [
 
                 // delete the previously existing bot alias
-                Bot.deleteBotAlias,
+                Bot.deleteBotAliasWithBackOff,
 
                 // delete the previously existing bot
                 Bot.deleteBot,
@@ -96,8 +96,11 @@ function deploy(timeTasticToken) {
                 // create the bot
                 async.apply(Bot.createBot, intents),
 
-                // wait until AWS has finished building the bot
+                // wait until AWS has finished creating the bot
                 Bot.waitForBotProvision,
+
+                // wait until AWS has finished building the bot
+                Bot.waitForBotBuild,
 
                 // create the alias
                 Bot.createBotAlias

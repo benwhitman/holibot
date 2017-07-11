@@ -6,6 +6,10 @@ var Lex = new AWS.LexModelBuildingService({ region: 'us-east-1' });
 // Other
 var fs = require('fs');
 
+// backoffs
+const MAX_BACKOFFS = 4;
+var deleteBotAliasBackOffs = 0;
+
 /*
 Delete an existing Holibot if it exists
 */
@@ -20,8 +24,12 @@ exports.deleteBot = function (callback) {
                 console.log("Holibot already exists - deleting");
                 Lex.deleteBot({ name: existingBot.name },
                     (err, data) => {
-                        console.log("existing bot deleted");
-                        callback(null);
+                        if (err) {
+                            callback(err);
+                        } else {
+                            console.log("existing bot deleted");
+                            callback(null);
+                        }
                     });
             } else {
                 callback(null);
@@ -45,25 +53,42 @@ exports.createBot = function (intents, callback) {
         });
     });
     Lex.putBot(bot, (err, data) => {
-        callback(null);
+        if (err) {
+            callback(err);
+        } else {
+            callback(null);
+        }
     });
 };
 
 /*
-Delete an existing 'prod' alias for Holibot if it exists
-*/
-exports.deleteBotAlias = function (callback) {
-    console.log("Deleting previous Holibot prod alias if necessary");
+Delete an existing 'prod' alias for Holibot if it exists.
 
-    try {
-        Lex.deleteBotAlias({ name: 'prod', botName: 'Holibot' }, () => {
-            console.log("Bot alias deleted");
-            callback(null);
-        });
-    }
-    catch (error) {
-        callback(err);
-    }
+Because AWS operations are asynchronous, we may need to wait before this works so this incorporates
+a back-off system
+*/
+exports.deleteBotAliasWithBackOff = function (callback) {
+    setTimeout(() => {
+        console.log("Deleting previous Holibot prod alias if necessary");
+        Lex.deleteBotAlias({ name: 'prod', botName: 'Holibot' },
+            (err, bot) => {
+                if (err && !/NotFoundException/.test(err)) {
+                    console.log("Error deleting alias");
+                    if (deleteBotAliasBackOffs < MAX_BACKOFFS) {
+                        deleteBotAliasBackOffs ++;
+                       
+                        console.log("Back off " + deleteBotAliasBackOffs);
+                        exports.deleteBotAliasWithBackOff(callback);
+                    } else {
+                        // maximum backoffs reached, quit
+                        callback(err);
+                    }
+                } else {
+                    // bot created, continue
+                    callback(null);
+                }
+            });
+    }, 2000 * deleteBotAliasBackOffs);
 };
 
 /*
@@ -76,8 +101,12 @@ exports.createBotAlias = function (callback) {
         botName: 'Holibot',
         botVersion: '$LATEST'
     }, (err, data) => {
-        console.log("Bot alias 'prod' created.");
-        callback(null);
+        if (err) {
+            callback(err);
+        } else {
+            console.log("Bot alias 'prod' created.");
+            callback(null);
+        }
     });
 };
 
@@ -93,7 +122,27 @@ exports.waitForBotProvision = function (callback) {
             console.log("Waiting for Holibot to be provisioned before creating the alias");
 
             if (err) {
+                console.log(err);
                 exports.waitForBotProvision(callback);
+            } else {
+                // bot created, continue
+                callback(null);
+            }
+        });
+    }, 2000);
+};
+
+exports.waitForBotBuild = function (callback) {
+    setTimeout(() => {
+        var botCreated = Lex.getBot({
+            name: 'Holibot',
+            versionOrAlias: '$LATEST'
+        }, (err, bot) => {
+            console.log("Waiting for Holibot to be built before creating the alias");
+
+            if (err || bot.status === "READY") {
+                console.log(err);
+                exports.waitForBotBuild(callback);
             } else {
                 // bot created, continue
                 callback(null);

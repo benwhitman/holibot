@@ -10,14 +10,16 @@ var _ = require('lodash');
 Create or replace an array of intents.
 */
 exports.replaceAll = function (intents, callback) {
-    var approveIntent = intents[0];
+    // build an array of functions to firstly check each intent's existence and 
+    // secondly create or replace the intent in AWS
     checkAndCreateFunctions = [];
-    
-    intents.forEach((intent) => { 
+
+    intents.forEach((intent) => {
         checkAndCreateFunctions.push(buildCheckIntentFunction(intent));
         checkAndCreateFunctions.push(buildCreateOrReplaceIntentFunction(intent));
     });
 
+    // execute the functions in sequence
     async.waterfall(checkAndCreateFunctions, (err, result) => {
         if (err) {
             callback(err);
@@ -25,24 +27,25 @@ exports.replaceAll = function (intents, callback) {
             callback(null);
         }
     });
+};
 
-    function buildCheckIntentFunction(intent) {
-        return function (callback) {
-            Lex.getIntent({ name: intent.name, version: '$LATEST' },
-                function (err, existingIntent) {
-                    if (/NotFoundException/.test(err)) {
-                        console.log("intent not found");
-                        callback(null, 'no-checksum');
-                    } else if (err) {
-                        console.log("error getting intent");
-                        callback(err);
-                    } else {
-                        console.log("existing intent found");
-                        callback(null, existingIntent.checksum);
-                    }
-                });
-        }
-    }
+function buildCheckIntentFunction(intent) {
+    return function (callback) {
+        Lex.getIntent({ name: intent.name, version: '$LATEST' },
+            function (err, existingIntent) {
+                console.log(intent.name);
+                if (/NotFoundException/.test(err)) {
+                    console.log("intent not found - creating...");
+                    callback(null, 'no-checksum');
+                } else if (err) {
+                    console.log("error getting intent");
+                    callback(err);
+                } else {
+                    console.log("intent already exists - replacing...");
+                    callback(null, existingIntent.checksum);
+                }
+            });
+    };
 }
 
 function buildCreateOrReplaceIntentFunction(intent) {
@@ -51,7 +54,6 @@ function buildCreateOrReplaceIntentFunction(intent) {
         // create a params object for putIntent. Checksum should only be specified if this is a replacement operation
         var params = Object.assign(intent, { checksum: checksum === 'no-checksum' ? null : checksum });
 
-        // console.log("params: " + JSON.stringify(params));
         Lex.putIntent(params,
             (err, result) => {
                 //console.log(err, result);
