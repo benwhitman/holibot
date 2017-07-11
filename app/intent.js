@@ -9,53 +9,58 @@ var _ = require('lodash');
 /*
 Create or replace an array of intents.
 */
-exports.replaceAll = async function (intents, callback) {
+exports.replaceAll = function (intents, callback) {
+    var approveIntent = intents[0];
+    checkAndCreateFunctions = [];
+    
+    intents.forEach((intent) => { 
+        checkAndCreateFunctions.push(buildCheckIntentFunction(intent));
+        checkAndCreateFunctions.push(buildCreateOrReplaceIntentFunction(intent));
+    });
 
-    // get the current intents in AWS
-    try {
-        var existingIntents = await Lex.getIntents().promise();
-        var promises = [];
-        intents.forEach((intent) => {
-            console.log("Looking for " + intent.name);
+    async.waterfall(checkAndCreateFunctions, (err, result) => {
+        if (err) {
+            callback(err);
+        } else {
+            callback(null);
+        }
+    });
 
-            var foundIntent = _.find(existingIntents.intents, (i) => i.name === intent.name);
-            if (foundIntent) {
-                promises.push(new Promise((resolve, reject) => {
-                    // ok the intent exists, so get the checksum
-                    Lex.getIntent({ name: intent.name, version: '$LATEST' },
-                        (err, existingIntent) => {
+    function buildCheckIntentFunction(intent) {
+        return function (callback) {
+            Lex.getIntent({ name: intent.name, version: '$LATEST' },
+                function (err, existingIntent) {
+                    if (/NotFoundException/.test(err)) {
+                        console.log("intent not found");
+                        callback(null, 'no-checksum');
+                    } else if (err) {
+                        console.log("error getting intent");
+                        callback(err);
+                    } else {
+                        console.log("existing intent found");
+                        callback(null, existingIntent.checksum);
+                    }
+                });
+        }
+    }
+}
 
-                            console.log("Found " + intent.name + ", checksum: " + existingIntent.checksum);
+function buildCreateOrReplaceIntentFunction(intent) {
+    return function (checksum, callback) {
 
-                            // replace the intent
-                            Lex.putIntent(Object.assign(intent, { checksum: existingIntent.checksum }),
-                                (err, result) => {
-                                    if (err) {
-                                        return reject(err);
-                                    } else {
-                                        console.log(intent.name + " replaced.");
-                                        return resolve();
-                                    }
-                                });
-                        });
-                })
-                );
-            } else {
-                // create the intent
-                promises.push(Lex.putIntent(intent).promise());
-                console.log(intent.name + " created.");
-            }
-        });
+        // create a params object for putIntent. Checksum should only be specified if this is a replacement operation
+        var params = Object.assign(intent, { checksum: checksum === 'no-checksum' ? null : checksum });
 
-        Promise.all(promises)
-            .then(() => {
-                callback(null);
-            })
-            .catch((err) => {
-                callback(err);
+        // console.log("params: " + JSON.stringify(params));
+        Lex.putIntent(params,
+            (err, result) => {
+                //console.log(err, result);
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null);
+                }
             });
-    }
-    catch (error) {
-        callback(error);
-    }
-};
+    };
+
+}

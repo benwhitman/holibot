@@ -77,11 +77,11 @@ function deploy(timeTasticToken) {
                 // get the AWS ARN of the created lambda function
                 Arn.getLambdaFunctionArn,
 
-                // create or replace intents
-                async.apply(Intent.replaceAll, intents),
-
                 // add permissions for Lex to call Lambda
-                addPermission
+                addPermission,
+
+                // create or replace intents
+                async.apply(Intent.replaceAll, intents)
             ])
 
             // add tasks in the case that --refresh-intents-only was NOT specified
