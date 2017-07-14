@@ -1,0 +1,49 @@
+{
+    "fulfillmentActivity": {
+        "type": "CodeHook",
+        "codeHook": {
+            "uri": "this-will-get-replaced-by-the-setup-script",
+            "messageVersion": "1.0"
+        }
+    },
+    "sampleUtterances": [
+        "Who is out in {Department} {Date}",
+        "Who's off in {Department} {Date}"
+    ],
+    "slots": [
+        {
+            "priority": 1,
+            "slotType": "Departments",
+            "name": "Department",
+            "slotConstraint": "Required",
+            "valueElicitationPrompt": {
+                "maxAttempts": 2,
+                "messages": [
+                    {
+                        "contentType": "PlainText",
+                        "content": "Which department?"
+                    }
+                ]
+            },
+            "sampleUtterances": [],
+            "slotTypeVersion": "1"
+        },
+        {
+            "priority": 2,
+            "slotType": "AMAZON.DATE",
+            "name": "Date",
+            "slotConstraint": "Optional",
+            "valueElicitationPrompt": {
+                "maxAttempts": 2,
+                "messages": [
+                    {
+                        "contentType": "PlainText",
+                        "content": "Which day or date are you interested in?"
+                    }
+                ]
+            },
+            "sampleUtterances": []
+        }
+    ],
+    "name": "WhoIsOutInDepartment"
+}

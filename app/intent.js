@@ -56,7 +56,6 @@ function buildCreateOrReplaceIntentFunction(intent) {
 
         Lex.putIntent(params,
             (err, result) => {
-                //console.log(err, result);
                 if (err) {
                     callback(err);
                 } else {

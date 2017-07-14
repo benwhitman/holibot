@@ -9,6 +9,9 @@ var fs = require('fs');
 // backoffs
 const MAX_BACKOFFS = 4;
 var deleteBotAliasBackOffs = 0;
+var deleteBotBackOffs = 0;
+var createBotBackOffs = 0;
+var createBotAliasBackOffs = 0;
 
 /*
 Delete an existing Holibot if it exists
@@ -41,24 +44,36 @@ exports.deleteBot = function (callback) {
 Create the bot
 */
 exports.createBot = function (intents, callback) {
-
-    console.log("Creating bot");
-    // get the bot object, which starts out in the local ./lex-objects/bot.json file but needs
-    // to be added to depending on which intents we are creating
-    var bot = JSON.parse(fs.readFileSync('./lex-objects/bot.json', 'utf-8'));
-    intents.forEach((intent) => {
-        bot.intents.push({
-            "intentVersion": "$LATEST",
-            "intentName": intent.name
+    setTimeout(() => {
+        console.log("Creating bot");
+        // get the bot object, which starts out in the local ./lex-objects/bot.json file but needs
+        // to be added to depending on which intents we are creating
+        var bot = JSON.parse(fs.readFileSync('./lex-objects/bot.json', 'utf-8'));
+        
+        intents.forEach((intent) => {
+            bot.intents.push({
+                "intentVersion": "$LATEST",
+                "intentName": intent.name
+            });
         });
-    });
-    Lex.putBot(bot, (err, data) => {
-        if (err) {
-            callback(err);
-        } else {
-            callback(null);
-        }
-    });
+        Lex.putBot(bot, (err, data) => {
+            if (err && !/NotFoundException/.test(err)) {
+                console.log("Error creating bot");
+                if (createBotBackOffs < MAX_BACKOFFS) {
+                    createBotBackOffs++;
+
+                    console.log("Back off " + createBotBackOffs);
+                    exports.createBot(intents, callback);
+                } else {
+                    // maximum backoffs reached, quit
+                    callback(err);
+                }
+            } else {
+                // bot created, continue
+                callback(null);
+            }
+        });
+    }, 2000 * createBotBackOffs);
 };
 
 /*
@@ -67,7 +82,7 @@ Delete an existing 'prod' alias for Holibot if it exists.
 Because AWS operations are asynchronous, we may need to wait before this works so this incorporates
 a back-off system
 */
-exports.deleteBotAliasWithBackOff = function (callback) {
+exports.deleteBotAlias = function (callback) {
     setTimeout(() => {
         console.log("Deleting previous Holibot prod alias if necessary");
         Lex.deleteBotAlias({ name: 'prod', botName: 'Holibot' },
@@ -75,16 +90,16 @@ exports.deleteBotAliasWithBackOff = function (callback) {
                 if (err && !/NotFoundException/.test(err)) {
                     console.log("Error deleting alias");
                     if (deleteBotAliasBackOffs < MAX_BACKOFFS) {
-                        deleteBotAliasBackOffs ++;
-                       
+                        deleteBotAliasBackOffs++;
+
                         console.log("Back off " + deleteBotAliasBackOffs);
-                        exports.deleteBotAliasWithBackOff(callback);
+                        exports.deleteBotAlias(callback);
                     } else {
                         // maximum backoffs reached, quit
                         callback(err);
                     }
                 } else {
-                    // bot created, continue
+                    // bot alias deleted, continue
                     callback(null);
                 }
             });

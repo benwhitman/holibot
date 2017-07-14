@@ -21,6 +21,7 @@ var _ = require('lodash');
 const Arn = require('./app/arn');
 const Bot = require('./app/bot');
 const Intent = require('./app/intent');
+const SlotType = require('./app/slot-type');
 const Static = require('./app/static');
 
 // read the configured intents for this bot from the local JSON files
@@ -39,6 +40,7 @@ program
     .parse(process.argv);
 
 console.log("Holibot installer.");
+
 if (!program.timetasticToken) {
     console.log("Please specify your Timetastic API token with -t");
     process.exit();
@@ -80,15 +82,18 @@ function deploy(timeTasticToken) {
                 // add permissions for Lex to call Lambda
                 addPermission,
 
+                // create the slot type for departments
+                async.apply(SlotType.createDepartmentsSlotType, timeTasticToken, 'https://app.timetastic.co.uk/api/'),
+
                 // create or replace intents
                 async.apply(Intent.replaceAll, intents)
             ])
 
             // add tasks in the case that --refresh-intents-only was NOT specified
             .concat(!program.refreshIntentsOnly ? [
-
+                
                 // delete the previously existing bot alias
-                Bot.deleteBotAliasWithBackOff,
+                Bot.deleteBotAlias,
 
                 // delete the previously existing bot
                 Bot.deleteBot,
