@@ -14,7 +14,7 @@ A Slackbot for booking annual leave in TimeTastic implemented in AWS Lex and Lam
 * show your planned holidays
 * approve holidays for others
 * show your outstanding holiday allowance
-* show which approvals are outstanding
+* show who's off in various departments on a given day
 
 ## how do I set it up?
 
@@ -43,7 +43,3 @@ When the installation is complete you will have a bot configured for your TimeTa
 * Back in your Slack app page under *Settings* > *Manage Distribution* click the 'Add to Slack' button.
 
 > Note: Users' email addresses must be the same in Slack as they are in Timetastic for Holibot to work.
-
-`
-aws lambda update-function-configuration --environment "Variables={SlackToken=<your Slack Oauth token>}" --function-name holibot-prod-handler
-`

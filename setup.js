@@ -93,12 +93,6 @@ function deploy(timeTasticToken) {
             // add tasks in the case that --refresh-intents-only was NOT specified
             .concat(!program.refreshIntentsOnly ? [
                 
-                // delete the previously existing bot alias
-                //Bot.deleteBotAlias,
-
-                // delete the previously existing bot
-                //Bot.deleteBot,
-
                 // create the bot
                 async.apply(Bot.createBot, intents),
 
