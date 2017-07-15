@@ -26,7 +26,7 @@
                 ]
             },
             "sampleUtterances": [],
-            "slotTypeVersion": "1"
+            "slotTypeVersion": "$LATEST"
         },
         {
             "priority": 2,

@@ -40,6 +40,26 @@ exports.resolveUserId = function (slackUser) {
     });
 };
 
+// this function takes a department name and looks up the department id in Timetastic
+exports.resolveDepartmentId = function (departmentName) {
+    console.log("resolveDepartmentId starting for " + departmentName);
+    return new Promise((resolve, reject) => {
+
+        var url = endpoint + "departments";
+        baseRequest.get(url, {}, function (error, response, body) {
+            if (response.statusCode === 200) {
+
+                // body will now be an array of departments, so look up the id of the one with our supplied name from the slot
+                var timetasticDepartmentId = _.filter(JSON.parse(body), (department) => department.name.toLowerCase() === departmentName.toLowerCase())[0].id;
+
+                resolve(timetasticDepartmentId);
+            } else {
+                reject(Error(error));
+            }
+        });
+    });
+};
+
 // given a name which we assume to be distinct (because it was passed in from a distinct list), return the timetastic user id
 // of the employee with that name
 var resolveUserIdFromName = function (name) {
@@ -93,6 +113,30 @@ exports.bookHoliday = function (userId, slots, callback, close, outputSessionAtt
             contentType: 'PlainText',
             content: body.response
         }));
+    });
+};
+
+exports.checkHolidaysForDepartment = function (departmentId, slots, callback, close, outputSessionAttributes) {
+
+    var url = endpoint + "holidays?departmentid=" + departmentId + "&start=" + moment().format("YYYY-MM-DD");
+
+    console.log("GET: " + url);
+
+    baseRequest.get(url, function (error, response, body) {
+        console.log("Error: " + JSON.stringify(error));
+        console.log("body: " + body);
+
+        if (response.statusCode === 200) {
+            callback(null, close(outputSessionAttributes, 'Fulfilled', {
+                contentType: 'PlainText',
+                content: Formatters.holidayList(JSON.parse(body).holidays, false, true, 'Here are the holidays for ' + slots.department, 'There were no matching bookings')
+            }));
+        } else {
+            callback(null, close(outputSessionAttributes, 'Fulfilled', {
+                contentType: 'PlainText',
+                content: body.response
+            }));
+        }
     });
 };
 

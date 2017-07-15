@@ -3,7 +3,8 @@ var AWS = require('aws-sdk');
 var Lambda = new AWS.Lambda({ region: 'us-east-1' });
 var Lex = new AWS.LexModelBuildingService({ region: 'us-east-1' });
 
-// Other
+// 3rd party
+var async = require('async');
 var fs = require('fs');
 
 // backoffs
@@ -43,7 +44,7 @@ exports.deleteBot = function (callback) {
 /*
 Create the bot
 */
-exports.createBot = function (intents, callback) {
+exports.createBotOld = function (intents, callback) {
     setTimeout(() => {
         console.log("Creating bot");
         // get the bot object, which starts out in the local ./lex-objects/bot.json file but needs
@@ -57,7 +58,10 @@ exports.createBot = function (intents, callback) {
             });
         });
         Lex.putBot(bot, (err, data) => {
-            if (err && !/NotFoundException/.test(err)) {
+            if (err && /ResourceInUseException/.test(err)) {
+                console.log("You appear to have a channel association for Holibot. You will need to delete this before a new version of the bot can be deployed.");
+                process.exit();
+            } else if (err && !/NotFoundException/.test(err)) {
                 console.log("Error creating bot");
                 if (createBotBackOffs < MAX_BACKOFFS) {
                     createBotBackOffs++;
@@ -165,3 +169,65 @@ exports.waitForBotBuild = function (callback) {
         });
     }, 2000);
 };
+
+
+/*---------------------------------------*/
+exports.createBot = function(intents, callback) {
+    console.log("Creating bot");
+        // get the bot object, which starts out in the local ./lex-objects/bot.json file but needs
+        // to be added to depending on which intents we are creating
+        var bot = JSON.parse(fs.readFileSync('./lex-objects/bot.json', 'utf-8'));
+        
+        intents.forEach((intent) => {
+            bot.intents.push({
+                "intentVersion": "$LATEST",
+                "intentName": intent.name
+            });
+        });
+        
+    async.waterfall([
+        buildCheckBotFunction(bot), 
+        buildCreateOrReplaceBotFunction(bot)
+    ], (err, result) => {
+        if (err) {
+            callback(err);
+        } else {
+            callback(null);
+        }
+    });
+};
+
+function buildCheckBotFunction(bot) {
+    return function (callback) {
+        Lex.getBot({ name: 'Holibot', versionOrAlias: '$LATEST' },
+            function (err, existingBot) {
+                if (/NotFoundException/.test(err)) {
+                    console.log("bot not found - creating...");
+                    callback(null, 'no-checksum');
+                } else if (err) {
+                    console.log("error getting bot");
+                    callback(err);
+                } else {
+                    console.log("bot already exists - replacing with new version...");
+                    callback(null, existingBot.checksum);
+                }
+            });
+    };
+}
+
+function buildCreateOrReplaceBotFunction(bot) {
+    return function (checksum, callback) {
+
+        // create a params object for putBot. Checksum should only be specified if this is a replacement operation
+        var params = Object.assign(bot, { checksum: checksum === 'no-checksum' ? null : checksum });
+
+        Lex.putBot(params,
+            (err, result) => {
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null);
+                }
+            });
+    };
+}

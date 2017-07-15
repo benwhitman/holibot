@@ -85,6 +85,22 @@ function requestTimeOff(intentRequest, slackUser, callback) {
         });
 }
 
+function whoIsOutInDepartment(intentRequest, callback) {
+    const outputSessionAttributes = intentRequest.sessionAttributes || {};
+
+    var slots = {
+        date: intentRequest.currentIntent.slots.Date,
+        department: intentRequest.currentIntent.slots.Department
+    };
+
+    Timetastic.resolveDepartmentId(slots.department)
+        .then((departmentId) => {
+            console.log("TT department id: " + departmentId);
+
+            Timetastic.checkHolidaysForDepartment(departmentId, slots, callback, close, outputSessionAttributes);
+        });
+}
+
 function handleIntent(intentRequest, callback) {
     console.log(`handleIntent userId=${intentRequest.userId}, intent=${intentRequest.currentIntent.name}`);
     console.log("intent: " + JSON.stringify(intentRequest));
@@ -107,6 +123,9 @@ function handleIntent(intentRequest, callback) {
 
         case 'CheckApprovals':
             return checkApprovals(intentRequest, callback);
+
+        case 'WhoIsOutInDepartment':
+            return whoIsOutInDepartment(intentRequest, callback);
 
         default:
             throw new Error(`Intent with name ${name} not supported`);

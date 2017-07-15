@@ -21,6 +21,6 @@
     },
     "voiceId": "Salli",
     "childDirected": false,
-    "idleSessionTTLInSeconds": 600,
+    "idleSessionTTLInSeconds": 60,
     "description": "Book and query your annual leave in TimeTastic"
 }

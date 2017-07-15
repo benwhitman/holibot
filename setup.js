@@ -20,6 +20,7 @@ var _ = require('lodash');
 // import task functions
 const Arn = require('./app/arn');
 const Bot = require('./app/bot');
+const BotAlias = require('./app/bot-alias');
 const Intent = require('./app/intent');
 const SlotType = require('./app/slot-type');
 const Static = require('./app/static');
@@ -93,10 +94,10 @@ function deploy(timeTasticToken) {
             .concat(!program.refreshIntentsOnly ? [
                 
                 // delete the previously existing bot alias
-                Bot.deleteBotAlias,
+                //Bot.deleteBotAlias,
 
                 // delete the previously existing bot
-                Bot.deleteBot,
+                //Bot.deleteBot,
 
                 // create the bot
                 async.apply(Bot.createBot, intents),
@@ -108,7 +109,7 @@ function deploy(timeTasticToken) {
                 Bot.waitForBotBuild,
 
                 // create the alias
-                Bot.createBotAlias
+                BotAlias.createBotAlias
             ] : []
             ), (err, results) => {
                 if (err) {
