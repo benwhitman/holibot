@@ -129,7 +129,7 @@ exports.checkHolidaysForDepartment = function (departmentId, slots, callback, cl
         if (response.statusCode === 200) {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
                 contentType: 'PlainText',
-                content: Formatters.holidayList(JSON.parse(body).holidays, false, true, 'Here are the holidays for ' + slots.department, 'There were no matching bookings')
+                content: Formatters.holidayList(JSON.parse(body).holidays, false, true, 'Here are the holidays for ' + slots.department + ' on ' + slots.date, 'There were no matching bookings')
             }));
         } else {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
