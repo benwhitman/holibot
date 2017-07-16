@@ -118,7 +118,8 @@ exports.bookHoliday = function (userId, slots, callback, close, outputSessionAtt
 
 exports.checkHolidaysForDepartment = function (departmentId, slots, callback, close, outputSessionAttributes) {
 
-    var url = endpoint + "holidays?departmentid=" + departmentId + "&start=" + moment().format("YYYY-MM-DD");
+    var url = endpoint + "holidays?departmentid=" + departmentId + "&start=" + moment(slots.date).format("YYYY-MM-DD")
+    + "&end=" + moment(slots.date).format("YYYY-MM-DD");
 
     console.log("GET: " + url);
 
@@ -129,7 +130,7 @@ exports.checkHolidaysForDepartment = function (departmentId, slots, callback, cl
         if (response.statusCode === 200) {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
                 contentType: 'PlainText',
-                content: Formatters.holidayList(JSON.parse(body).holidays, false, true, 'Here are the holidays for ' + slots.department + ' on ' + slots.date, 'There were no matching bookings')
+                content: Formatters.holidayList(JSON.parse(body).holidays, false, true, 'Here are the holidays for *' + slots.department + '* on ' + slots.date, 'There were no matching bookings')
             }));
         } else {
             callback(null, close(outputSessionAttributes, 'Fulfilled', {
