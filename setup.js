@@ -9,7 +9,7 @@ var AWS = require('aws-sdk');
 var Lambda = new AWS.Lambda({ region: 'us-east-1' });
 var Lex = new AWS.LexModelBuildingService({ region: 'us-east-1' });
 
-// Other
+// 3rd party
 var fs = require('fs');
 var program = require('commander');
 var promptly = require('promptly');

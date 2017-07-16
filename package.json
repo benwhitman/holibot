@@ -18,6 +18,7 @@
     "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "promptly": "^2.2.0",
+    "read": "^1.0.7",
     "request": "^2.81.0"
   },
   "devDependencies": {

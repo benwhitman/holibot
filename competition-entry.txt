@@ -17,14 +17,15 @@ Holibot provides the following intents
 * RequestTimeOff *"I need a holiday from Tuesday to 13th August"*
 * CheckApprovals *"What approvals are outstanding?"*
 * Approve *"Approve all [Alice's|Bob's|Colin's] holidays"*
+* WhosOutInDepartment *"Who's out in sales today?"*
 
 Architecture
 
 This repo contains a setup script with accompanying files to create the following objects in AWS:
-* 5 Lex intents to cover the functionality above
-* A slot type for employee names which is dynamically gathered upon startup
+* 6 Lex intents to cover the functionality above
+* A slot type for department names which is gathered from Timetastic upon deployment
 * A single Lambda function, which handles all of the intents
-* The Lex bot itself
+* The Lex bot itself and an alias
 * Any necessary permissions on AWS
 
 The (Node.js) setup script uses the following technologies to deploy Holibot:
@@ -41,18 +42,4 @@ figured out the best ways to answer the various questions and interact according
 The hardest challenges in this project came from writing a script to actually deploy the bot. I had chosen the Serverless framework for packaging
 my Lambda handler function, but unfortunately Serverless does not support deploying Lex related objects.
 Neither does CloudFormation, so I had to write my own calls using the AWS SDK for Node.js to create the intents, bot and alias and apply the
-necessary permissions, as well as taking care of removing previous intents, aliases and bots in case the user was re-deploying.
-
-Future plans
-
-Currently the setup script generates a slot type in Lex for the employee names in the company which is used by
-the Approve intent so an approver can say "Approve all holidays for Bob". Obviously the list of names in an organisation
-changes, so a clear improvement would be to add another Lambda function, scheduled to run daily which queried
-the current slot values in Lex and compares this with the up to date user list in TimeTastic. If there are any changes,
-A new slot type version could be added and the bot rebuilt accordingly.
-
-What could have made this easier?
-
-Support for Lex in CloudFormation (this would have greatly simplified my deployment script)
-An AWS CLI command aws cli lex-models put-bot-channel-association (without this the user has to do an extra manual step in the AWS console).
-
+necessary permissions, as well as taking care of removing previous intents, slot types, aliases and bots in case the user was re-deploying.
