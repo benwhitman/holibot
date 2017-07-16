@@ -8,8 +8,7 @@
     "fulfillmentActivity": {
         "type": "CodeHook",
         "codeHook": {
-            "messageVersion": "1.0",
-            "uri": "this-will-get-replaced-by-the-setup-script"
+            "messageVersion": "1.0"
         }
     },
     "slots": []

@@ -2,6 +2,7 @@
     "name": "CheckAllowance",
     "sampleUtterances": [
         "How many days holiday do I have left",
+        "How many holidays do I have left",
         "What's my holiday allowance",
         "How much holiday time do I have",
         "What's my allowance",
@@ -11,8 +12,7 @@
     "fulfillmentActivity": {
         "type": "CodeHook",
         "codeHook": {
-            "messageVersion": "1.0",
-            "uri": "this-will-get-replaced-by-the-setup-script"
+            "messageVersion": "1.0"
         }
     },
     "slots": []

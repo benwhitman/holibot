@@ -41,7 +41,7 @@ function buildCheckIntentFunction(intent) {
                     console.log("error getting intent");
                     callback(err);
                 } else {
-                    console.log("intent already exists - replacing...");
+                    console.log("intent already exists - replacing with new version...");
                     callback(null, existingIntent.checksum);
                 }
             });

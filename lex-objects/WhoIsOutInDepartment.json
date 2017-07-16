@@ -2,7 +2,6 @@
     "fulfillmentActivity": {
         "type": "CodeHook",
         "codeHook": {
-            "uri": "this-will-get-replaced-by-the-setup-script",
             "messageVersion": "1.0"
         }
     },
