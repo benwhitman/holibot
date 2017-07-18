@@ -1,0 +1,354 @@
+{
+    "name": "Holibot",
+    "description": "Book and query your annual leave in TimeTastic",
+    "intents": [
+        {
+            "intentName": "CheckMyHolidays",
+            "intentVersion": "$LATEST"
+        },
+        {
+            "intentName": "Approve",
+            "intentVersion": "$LATEST"
+        },
+        {
+            "intentName": "RequestTimeOff",
+            "intentVersion": "$LATEST"
+        },
+        {
+            "intentName": "CheckApprovals",
+            "intentVersion": "$LATEST"
+        },
+        {
+            "intentName": "WhoIsOutInDepartment",
+            "intentVersion": "$LATEST"
+        },
+        {
+            "intentName": "CheckAllowance",
+            "intentVersion": "$LATEST"
+        }
+    ],
+    "clarificationPrompt": {
+        "messages": [
+            {
+                "contentType": "PlainText",
+                "content": "I didn't understand you, what would you like me to do?"
+            }
+        ],
+        "maxAttempts": 2,
+        "responseCard": null
+    },
+    "abortStatement": {
+        "messages": [
+            {
+                "contentType": "PlainText",
+                "content": "Sorry, I'm not able to assist at this time"
+            }
+        ],
+        "responseCard": null
+    },
+    "status": "READY",
+    "failureReason": null,
+    "lastUpdatedDate": "2017-07-16T11:19:21.140Z",
+    "createdDate": "2017-07-09T16:11:00.124Z",
+    "idleSessionTTLInSeconds": 60,
+    "voiceId": "Salli",
+    "checksum": "7f95aab4-ba07-4ff3-a1e9-7d1b129f6975",
+    "version": "$LATEST",
+    "locale": "en-US",
+    "childDirected": false,
+    "dependencies": {
+        "intents": [
+            {
+                "name": "RequestTimeOff",
+                "description": null,
+                "slots": [
+                    {
+                        "name": "StartDate",
+                        "description": null,
+                        "slotConstraint": "Required",
+                        "slotType": "AMAZON.DATE",
+                        "slotTypeVersion": null,
+                        "valueElicitationPrompt": {
+                            "messages": [
+                                {
+                                    "contentType": "PlainText",
+                                    "content": "Starting which day?"
+                                }
+                            ],
+                            "maxAttempts": 2,
+                            "responseCard": null
+                        },
+                        "priority": 1,
+                        "sampleUtterances": [],
+                        "responseCard": null
+                    },
+                    {
+                        "name": "EndDate",
+                        "description": null,
+                        "slotConstraint": "Required",
+                        "slotType": "AMAZON.DATE",
+                        "slotTypeVersion": null,
+                        "valueElicitationPrompt": {
+                            "messages": [
+                                {
+                                    "contentType": "PlainText",
+                                    "content": "Until when?"
+                                }
+                            ],
+                            "maxAttempts": 2,
+                            "responseCard": null
+                        },
+                        "priority": 2,
+                        "sampleUtterances": [],
+                        "responseCard": null
+                    }
+                ],
+                "sampleUtterances": [
+                    "Can I have some time off",
+                    "i would like to book some annual leave",
+                    "I would like to take some time off",
+                    "I want to book a holiday",
+                    "I want to book a vacation",
+                    "I'd like some time off from {StartDate} to {EndDate}",
+                    "I need a holiday"
+                ],
+                "confirmationPrompt": {
+                    "messages": [
+                        {
+                            "contentType": "PlainText",
+                            "content": "Just to check, you would like time off between {StartDate} and {EndDate} inclusive? Weekends and public holidays will not be counted."
+                        }
+                    ],
+                    "maxAttempts": 3,
+                    "responseCard": null
+                },
+                "rejectionStatement": {
+                    "messages": [
+                        {
+                            "contentType": "PlainText",
+                            "content": "Okay, your booking request is cancelled."
+                        }
+                    ],
+                    "responseCard": null
+                },
+                "conclusionStatement": {
+                    "messages": [
+                        {
+                            "contentType": "PlainText",
+                            "content": "Thank you. Your request has been submitted. You should receive a response from an approver soon."
+                        }
+                    ],
+                    "responseCard": null
+                },
+                "fulfillmentActivity": {
+                    "type": "CodeHook",
+                    "codeHook": {
+                        "uri": "arn:aws:lambda:us-east-1:503716507111:function:holibot-prod-handler",
+                        "messageVersion": "1.0"
+                    }
+                },
+                "parentIntentSignature": null,
+                "lastUpdatedDate": "2017-07-09T16:10:58.859Z",
+                "createdDate": "2017-07-09T16:10:58.859Z",
+                "version": "$LATEST",
+                "checksum": "b911c166-5396-460a-970a-266e32862050"
+            },
+            {
+                "name": "CheckMyHolidays",
+                "description": null,
+                "slots": [],
+                "sampleUtterances": [
+                    "Which holidays do I have booked",
+                    "holidays",
+                    "Which holidays are pending approval"
+                ],
+                "fulfillmentActivity": {
+                    "type": "CodeHook",
+                    "codeHook": {
+                        "uri": "arn:aws:lambda:us-east-1:503716507111:function:holibot-prod-handler",
+                        "messageVersion": "1.0"
+                    }
+                },
+                "parentIntentSignature": null,
+                "lastUpdatedDate": "2017-07-16T11:18:55.980Z",
+                "createdDate": "2017-07-09T16:10:58.463Z",
+                "version": "$LATEST",
+                "checksum": "cefb5daa-2edd-49d3-95e7-50e4e714aeaa"
+            },
+            {
+                "name": "WhoIsOutInDepartment",
+                "description": null,
+                "slots": [
+                    {
+                        "name": "Department",
+                        "description": null,
+                        "slotConstraint": "Required",
+                        "slotType": "Departments",
+                        "slotTypeVersion": "$LATEST",
+                        "valueElicitationPrompt": {
+                            "messages": [
+                                {
+                                    "contentType": "PlainText",
+                                    "content": "Which department?"
+                                }
+                            ],
+                            "maxAttempts": 2,
+                            "responseCard": null
+                        },
+                        "priority": 1,
+                        "sampleUtterances": [],
+                        "responseCard": null
+                    },
+                    {
+                        "name": "Date",
+                        "description": null,
+                        "slotConstraint": "Optional",
+                        "slotType": "AMAZON.DATE",
+                        "slotTypeVersion": null,
+                        "valueElicitationPrompt": {
+                            "messages": [
+                                {
+                                    "contentType": "PlainText",
+                                    "content": "Which day or date are you interested in?"
+                                }
+                            ],
+                            "maxAttempts": 2,
+                            "responseCard": null
+                        },
+                        "priority": 2,
+                        "sampleUtterances": [],
+                        "responseCard": null
+                    }
+                ],
+                "sampleUtterances": [
+                    "Who is out in {Department} {Date}",
+                    "Who's off in {Department} {Date}"
+                ],
+                "fulfillmentActivity": {
+                    "type": "CodeHook",
+                    "codeHook": {
+                        "uri": "arn:aws:lambda:us-east-1:503716507111:function:holibot-prod-handler",
+                        "messageVersion": "1.0"
+                    }
+                },
+                "parentIntentSignature": null,
+                "lastUpdatedDate": "2017-07-15T18:28:12.121Z",
+                "createdDate": "2017-07-14T22:45:22.475Z",
+                "version": "$LATEST",
+                "checksum": "e98e8a69-94ab-4684-98a9-b9a855d0b36c"
+            },
+            {
+                "name": "Approve",
+                "description": null,
+                "slots": [
+                    {
+                        "name": "HolidayId",
+                        "description": null,
+                        "slotConstraint": "Required",
+                        "slotType": "AMAZON.NUMBER",
+                        "slotTypeVersion": null,
+                        "valueElicitationPrompt": {
+                            "messages": [
+                                {
+                                    "contentType": "PlainText",
+                                    "content": "Which booking id do you wish to approve? (say 'Check Approvals' to see outstanding approvals)"
+                                }
+                            ],
+                            "maxAttempts": 2,
+                            "responseCard": null
+                        },
+                        "priority": 1,
+                        "sampleUtterances": [],
+                        "responseCard": null
+                    }
+                ],
+                "sampleUtterances": [
+                    "Approve {HolidayId}",
+                    "Approve booking {HolidayId}"
+                ],
+                "fulfillmentActivity": {
+                    "type": "CodeHook",
+                    "codeHook": {
+                        "uri": "arn:aws:lambda:us-east-1:503716507111:function:holibot-prod-handler",
+                        "messageVersion": "1.0"
+                    }
+                },
+                "parentIntentSignature": null,
+                "lastUpdatedDate": "2017-07-09T18:18:10.011Z",
+                "createdDate": "2017-07-09T18:18:10.011Z",
+                "version": "$LATEST",
+                "checksum": "bdebc2b0-3cfd-43c9-851b-02ccba2654c4"
+            },
+            {
+                "name": "CheckApprovals",
+                "description": null,
+                "slots": [],
+                "sampleUtterances": [
+                    "Which holidays are awaiting approval",
+                    "What approvals are outstanding",
+                    "Outstanding approvals",
+                    "approvals"
+                ],
+                "fulfillmentActivity": {
+                    "type": "CodeHook",
+                    "codeHook": {
+                        "uri": "arn:aws:lambda:us-east-1:503716507111:function:holibot-prod-handler",
+                        "messageVersion": "1.0"
+                    }
+                },
+                "parentIntentSignature": null,
+                "lastUpdatedDate": "2017-07-16T11:18:55.357Z",
+                "createdDate": "2017-07-09T16:10:58.086Z",
+                "version": "$LATEST",
+                "checksum": "d32292e2-8df1-44f0-baba-c7b2c081bfc6"
+            },
+            {
+                "name": "CheckAllowance",
+                "description": null,
+                "slots": [],
+                "sampleUtterances": [
+                    "How many days holiday do I have left",
+                    "How many holidays do I have left",
+                    "What's my holiday allowance",
+                    "How much holiday time do I have",
+                    "What's my allowance",
+                    "How many days holiday do I have",
+                    "How many vacation days do I have"
+                ],
+                "fulfillmentActivity": {
+                    "type": "CodeHook",
+                    "codeHook": {
+                        "uri": "arn:aws:lambda:us-east-1:503716507111:function:holibot-prod-handler",
+                        "messageVersion": "1.0"
+                    }
+                },
+                "parentIntentSignature": null,
+                "lastUpdatedDate": "2017-07-16T11:18:54.681Z",
+                "createdDate": "2017-07-09T16:10:57.735Z",
+                "version": "$LATEST",
+                "checksum": "8d471f80-603a-458a-8cb7-f47eeed9d03e"
+            }
+        ],
+        "slotTypes": [
+            {
+                "name": "Departments",
+                "description": "A list of all of the departments from your Timetastic account",
+                "enumerationValues": [
+                    {
+                        "value": "Engineering"
+                    },
+                    {
+                        "value": "Chatbot Development Team"
+                    },
+                    {
+                        "value": "Sales"
+                    }
+                ],
+                "lastUpdatedDate": "2017-07-15T18:51:43.423Z",
+                "createdDate": "2017-07-14T22:17:04.986Z",
+                "version": "$LATEST",
+                "checksum": "8c0376ee-a54e-462b-9e15-d853e8225e90"
+            }
+        ]
+    }
+}
