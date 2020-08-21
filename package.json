@@ -17,7 +17,7 @@
     "deep-extend": "^0.6.0",
     "eslint": "^3.19.0",
     "eslint-config-defaults": "^9.0.0",
-    "https-proxy-agent": "^2.2.2",
+    "https-proxy-agent": "^2.2.3",
     "lodash": "^4.17.14",
     "moment": "^2.24.0",
     "promptly": "^2.2.0",
