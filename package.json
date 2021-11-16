@@ -9,7 +9,7 @@
     "@slack/client": "^3.10.0",
     "@types/node": "^8.0.1",
     "async": "^2.5.0",
-    "aws-sdk": "^2.74.0",
+    "aws-sdk": "^2.814.0",
     "babel-eslint": "^7.2.3",
     "braces": "^3.0.2",
     "bufferutil": "^3.0.1",
