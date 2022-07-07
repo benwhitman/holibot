@@ -19,7 +19,7 @@
     "eslint-config-defaults": "^9.0.0",
     "https-proxy-agent": "^2.2.2",
     "lodash": "^4.17.14",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "promptly": "^2.2.0",
     "read": "^1.0.7",
     "request": "^2.88.0",
